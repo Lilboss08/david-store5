@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - David Store</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header>
+        <h2>🛍️ David Store</h2>
+        <a href="index.html">← Back to Shopping</a>
+    </header>
+
+    <section class="cart" id="cart1">
+        <h3>Your Shopping Cart</h3>
+        <ul id="cart-item"></ul>
+        <p id="cart-total">Total: $0</p>
+        
+        <div class="payment-section">
+            <h4>Select Payment Method</h4>
+            <div class="payment-options">
+                <button id="paystack-btn" class="payment-btn paystack-option">💳 Pay with Paystack</button>
+                <button id="bank-transfer-btn" class="payment-btn bank-option">🏦 Bank Transfer</button>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Bank Account Details Modal -->
+    <div id="bank-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Bank Transfer Details</h3>
+            <div class="bank-details">
+                <p><strong>Bank Name:</strong> OPAY</p>
+                <p><strong>Account Number:</strong> 8067080261</p>
+                <p><strong>Account Name:</strong> NOTOMA DAVID GODSFAVOUR</p>
+            </div>
+            <div class="payment-info">
+                <h4>Payment Instructions:</h4>
+                <ol>
+                    <li>Transfer the amount shown below to the bank account above</li>
+                    <li>Use your order ID as the transaction reference</li>
+                    <li>Screenshot or note your transaction reference</li>
+                    <li>Send proof of payment to support@davidstore.com</li>
+                </ol>
+                <p class="amount-due"><strong>Amount Due: <span id="bank-amount">$0</span></strong></p>
+            </div>
+            <button id="copy-details-btn" class="copy-btn">📋 Copy Account Details</button>
+            <button id="confirm-bank-payment" class="confirm-btn">✓ I've Made the Transfer</button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <!-- Company Info Section -->
+            <div class="footer-section">
+                <h3>David Store</h3>
+                <p>Your trusted online shopping destination for premium products at unbeatable prices.</p>
+                <div class="social-links">
+                    <a href="#" title="Facebook">f</a>
+                    <a href="#" title="Twitter">𝕏</a>
+                    <a href="#" title="Instagram">📷</a>
+                    <a href="#" title="LinkedIn">in</a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="index.html#product1">Shop</a></li>
+                    <li><a href="index.html#contact">Contact Us</a></li>
+                    <li><a href="#">About Us</a></li>
+                </ul>
+            </div>
+
+            <!-- Customer Service -->
+            <div class="footer-section">
+                <h4>Customer Service</h4>
+                <ul>
+                    <li><a href="#">Track Order</a></li>
+                    <li><a href="#">Returns & Exchanges</a></li>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+
+            <!-- Policies -->
+            <div class="footer-section">
+                <h4>Policies</h4>
+                <ul>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms & Conditions</a></li>
+                    <li><a href="#">Refund Policy</a></li>
+                    <li><a href="#">Cookies Policy</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="footer-section">
+                <h4>Contact Info</h4>
+                <p>📍 123 Shopping Street, Commerce City, CC 12345</p>
+                <p>📧 support@davidstore.com</p>
+                <p>📞 1-800-DAVID-01</p>
+                <p>🕐 Mon-Fri: 9AM - 6PM EST</p>
+            </div>
+        </div>
+
+        <!-- Payment Methods & Certifications -->
+        <div class="footer-certifications">
+            <div class="payment-methods">
+                <span>✓ Secure Payments:</span>
+                <span>Visa</span>
+                <span>Mastercard</span>
+                <span>PayPal</span>
+                <span>Apple Pay</span>
+            </div>
+            <div class="certifications">
+                <span>🔒 SSL Certified</span>
+                <span>✓ 100% Authentic</span>
+                <span>✓ Money Back Guarantee</span>
+            </div>
+        </div>
+
+        <!-- Copyright & Trademarks -->
+        <div class="footer-bottom">
+            <p>&copy; 2026 David Store. All rights reserved.</p>
+            <p>All product names, logos, brands, and trademarks are the property of their respective owners.</p>
+        </div>
+    </footer>
+
+<!-- load application code -->
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
