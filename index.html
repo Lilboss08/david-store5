@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>David Store - Premium Products at Great Prices</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+</head>
+<body>
+    <header>
+        <a href="#home" style="text-decoration: none;"><h2>🛍️ David Store</h2></a>
+        <div id="cart-icon">
+            <a href="cart.html">🛒 Cart ( <span id="cart-count">0</span> )</a>
+        </div>
+    </header>
+
+    <nav class="navbar">
+        <ul class="nav-menu">
+            <li><a href="#home" class="nav-link">Home</a></li>
+            <li class="dropdown">
+                <a href="#categories" class="nav-link">Categories ▼</a>
+                <div class="dropdown-content">
+                    <a href="#" onclick="displayProducts()">All Products</a>
+                    <a href="#" onclick="filterByCategory('Electronics')">Electronics</a>
+                    <a href="#" onclick="filterByCategory('Men\'s Clothing')">Men's Clothing</a>
+                    <a href="#" onclick="filterByCategory('Jewelry')">Jewelry</a>
+                    <a href="#" onclick="filterByCategory('Women\'s Clothing')">Women's Clothing</a>
+                </div>
+            </li>
+            <li><a href="#contact" class="nav-link">Contact</a></li>
+        </ul>
+    </nav>
+
+    <div class="search-bar">
+        <input type="search" id="search" placeholder="Search for products...">
+        <button onclick="searchProduct()">Search</button>
+    </div>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero" id="home">
+            <!-- Floating decorative elements -->
+            <div class="hero-decoration">
+                <div class="floating-shape shape-1"></div>
+                <div class="floating-shape shape-2"></div>
+                <div class="floating-shape shape-3"></div>
+                <div class="floating-icon icon-1">📱</div>
+                <div class="floating-icon icon-2">💎</div>
+                <div class="floating-icon icon-3">👕</div>
+            </div>
+
+            <div class="hero-slider">
+                <div class="hero-slide active" data-slide="1">
+                    <div class="hero-content" data-aos="fade-right" data-aos-duration="1000">
+                        <div class="hero-badge">✨ Premium Quality</div>
+                        <h1>Welcome to <span class="highlight">David Store</span></h1>
+                        <p class="hero-description">Discover an extraordinary shopping experience with our carefully curated collection of premium products. From cutting-edge technology to timeless fashion, find everything you need at unbeatable prices with exceptional quality guaranteed.</p>
+                        <div class="hero-stats">
+                            <div class="stat">
+                                <span class="stat-number">10K+</span>
+                                <span class="stat-label">Happy Customers</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number">500+</span>
+                                <span class="stat-label">Quality Products</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number">24/7</span>
+                                <span class="stat-label">Customer Support</span>
+                            </div>
+                        </div>
+                        <div class="hero-actions">
+                            <button class="btn-primary" onclick="document.getElementById('product1').scrollIntoView({behavior: 'smooth'})">
+                                <span>🛍️ Shop Now</span>
+                            </button>
+                            <button class="btn-secondary" onclick="document.getElementById('contact').scrollIntoView({behavior: 'smooth'})">
+                                <span>📞 Contact Us</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-slide" data-slide="2">
+                    <div class="hero-content" data-aos="fade-left" data-aos-duration="1000">
+                        <div class="hero-badge">🚀 Future Tech</div>
+                        <h1>Latest <span class="highlight">Technology</span></h1>
+                        <p class="hero-description">Stay ahead of the curve with our cutting-edge electronics collection. From flagship smartphones and powerful laptops to innovative gadgets and accessories, experience the future of technology today with expert guidance and competitive pricing.</p>
+                        <div class="hero-features">
+                            <div class="feature">
+                                <span class="feature-icon">⚡</span>
+                                <span>Latest Models</span>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">🔧</span>
+                                <span>Expert Support</span>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">💰</span>
+                                <span>Best Prices</span>
+                            </div>
+                        </div>
+                        <div class="hero-actions">
+                            <button class="btn-primary" onclick="filterByCategory('Electronics')">
+                                <span>🔍 Explore Electronics</span>
+                            </button>
+                            <button class="btn-secondary" onclick="document.getElementById('search').focus()">
+                                <span>🔎 Search Products</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-slide" data-slide="3">
+                    <div class="hero-content" data-aos="zoom-in" data-aos-duration="1000">
+                        <div class="hero-badge">👗 Fashion Forward</div>
+                        <h1>Style & <span class="highlight">Fashion</span></h1>
+                        <p class="hero-description">Elevate your personal style with our premium fashion collection. Discover timeless pieces crafted from high-quality materials, designed for the modern individual who values both comfort and sophistication in every outfit.</p>
+                        <div class="hero-features">
+                            <div class="feature">
+                                <span class="feature-icon">✨</span>
+                                <span>Premium Quality</span>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">🎨</span>
+                                <span>Trendy Designs</span>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">👑</span>
+                                <span>Luxury Brands</span>
+                            </div>
+                        </div>
+                        <div class="hero-actions">
+                            <button class="btn-primary" onclick="filterByCategory('Men\'s Clothing')">
+                                <span>🛒 Shop Fashion</span>
+                            </button>
+                            <button class="btn-secondary" onclick="filterByCategory('Women\'s Clothing')">
+                                <span>👗 Women's Collection</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-navigation">
+                <button class="hero-prev" onclick="changeHeroSlide(-1)">
+                    <span>❮</span>
+                </button>
+                <button class="hero-next" onclick="changeHeroSlide(1)">
+                    <span>❯</span>
+                </button>
+            </div>
+
+            <div class="hero-dots">
+                <span class="hero-dot active" onclick="currentHeroSlide(1)"></span>
+                <span class="hero-dot" onclick="currentHeroSlide(2)"></span>
+                <span class="hero-dot" onclick="currentHeroSlide(3)"></span>
+            </div>
+        </section>
+
+        <section class="product-container" id="product1">
+            <!-- Products will be loaded here dynamically -->
+        </section>
+
+        <!-- Contact Section -->
+        <section class="contact-section" id="contact">
+            <div class="contact-container">
+                <h2>Get In Touch</h2>
+                <p class="contact-subtitle">Have questions? We'd love to hear from you.</p>
+                
+                <form class="contact-form" id="contactForm">
+                    <div class="form-group">
+                        <label for="fullName">Full Name *</label>
+                        <input type="text" id="fullName" name="fullName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">Subject *</label>
+                        <select id="subject" name="subject" required>
+                            <option value="">Select a subject</option>
+                            <option value="General Inquiry">General Inquiry</option>
+                            <option value="Product Question">Product Question</option>
+                            <option value="Order Issue">Order Issue</option>
+                            <option value="Feedback">Feedback</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Message *</label>
+                        <textarea id="message" name="message" rows="5" required></textarea>
+                    </div>
+
+                    <div class="form-group checkbox">
+                        <input type="checkbox" id="agree" name="agree" required>
+                        <label for="agree">I agree to the privacy policy *</label>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Send Message</button>
+                    <div id="formMessage" class="form-message"></div>
+                </form>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <!-- Company Info Section -->
+                <div class="footer-section">
+                    <h3>David Store</h3>
+                    <p>Your trusted online shopping destination for premium products at unbeatable prices.</p>
+                    <div class="social-links">
+                        <a href="#" title="Facebook">f</a>
+                        <a href="#" title="Twitter">𝕏</a>
+                        <a href="#" title="Instagram">📷</a>
+                        <a href="#" title="LinkedIn">in</a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#product1">Shop</a></li>
+                        <li><a href="#contact">Contact Us</a></li>
+                        <li><a href="#">About Us</a></li>
+                    </ul>
+                </div>
+
+                <!-- Customer Service -->
+                <div class="footer-section">
+                    <h4>Customer Service</h4>
+                    <ul>
+                        <li><a href="#">Track Order</a></li>
+                        <li><a href="#">Returns & Exchanges</a></li>
+                        <li><a href="#">Shipping Info</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Policies -->
+                <div class="footer-section">
+                    <h4>Policies</h4>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms & Conditions</a></li>
+                        <li><a href="#">Refund Policy</a></li>
+                        <li><a href="#">Cookies Policy</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <p>📍 123 Shopping Street, Commerce City, CC 12345</p>
+                    <p>📧 support@davidstore.com</p>
+                    <p>📞 1-800-DAVID-01</p>
+                    <p>🕐 Mon-Fri: 9AM - 6PM EST</p>
+                </div>
+            </div>
+
+            <!-- Payment Methods & Certifications -->
+            <div class="footer-certifications">
+                <div class="payment-methods">
+                    <span>✓ Secure Payments:</span>
+                    <span>Visa</span>
+                    <span>Mastercard</span>
+                    <span>PayPal</span>
+                    <span>Apple Pay</span>
+                </div>
+                <div class="certifications">
+                    <span>🔒 SSL Certified</span>
+                    <span>✓ 100% Authentic</span>
+                    <span>✓ Money Back Guarantee</span>
+                </div>
+            </div>
+
+            <!-- Copyright & Trademarks -->
+            <div class="footer-bottom">
+                <p>&copy; 2026 David Store. All rights reserved.</p>
+                <p>All product names, logos, brands, and trademarks are the property of their respective owners.</p>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Product Detail Modal -->
+    <div id="productModal" class="product-modal">
+        <div class="product-modal-content">
+            <span class="modal-close">&times;</span>
+            <div class="modal-body">
+                <div class="modal-image">
+                    <img id="modalProductImage" src="" alt="Product">
+                </div>
+                <div class="modal-details">
+                    <h2 id="modalProductTitle"></h2>
+                    <div class="modal-rating" id="modalProductRating"></div>
+                    <p class="modal-category" id="modalProductCategory"></p>
+                    <p id="modalProductDescription" class="modal-description"></p>
+                    <div class="modal-price-section">
+                        <div class="modal-price">
+                            <span class="price-label">Price:</span>
+                            <span id="modalProductPrice" class="price-value"></span>
+                        </div>
+                    </div>
+                    <div class="quantity-selector">
+                        <label for="quantityInput">Quantity:</label>
+                        <div class="quantity-control">
+                            <button id="decreaseQty" class="qty-btn">−</button>
+                            <input type="number" id="quantityInput" value="1" min="1" readonly>
+                            <button id="increaseQty" class="qty-btn">+</button>
+                        </div>
+                    </div>
+                    <div class="modal-total">
+                        <span>Subtotal:</span>
+                        <span id="modalSubtotal" class="subtotal-value">$0</span>
+                    </div>
+                    <button id="modalAddToCart" class="modal-add-btn">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+    
+    <script type="module" src="/src/main.js"></script>
+
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js">
+</script>
+<script type="text/javascript">
+   (function(){
+      emailjs.init({
+        publicKey: process.env.EMAIL_USER_ID || 'YRtq6j569ullLLTzg'
+      });
+   })();
+</script>
+
+
+</body>
+</html>
