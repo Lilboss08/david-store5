@@ -1,5 +1,5 @@
 // imported libraries (AOS still loaded via CDN in HTML)
-// define a simple frontend schema for product objects and validation helper
+import { getStoredUser, getAuthToken, isLoggedIn, logout, requireLogin } from './auth.js';
 const productSchema = {
     id: 'number',
     title: 'string',
@@ -133,6 +133,28 @@ function saveCart() {
 // Load and display cart on page load
 function loadCart() {
     updateCart();
+}
+
+// Auth helpers
+function renderAuthLinks() {
+    const authContainer = document.getElementById('auth-links');
+    if (!authContainer) return;
+
+    if (isLoggedIn()) {
+        const user = getStoredUser();
+        const name = user?.fullName || user?.name || 'Customer';
+        authContainer.innerHTML = `
+            <span class="user-greeting">Hi, ${name}</span>
+            <button id="logoutBtn" class="auth-btn">Logout</button>
+        `;
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.addEventListener('click', logout);
+    } else {
+        authContainer.innerHTML = `
+            <a href="login.html" class="auth-btn">Login</a>
+            <a href="register.html" class="auth-btn">Sign Up</a>
+        `;
+    }
 }
 
 // Product Modal Variables
@@ -382,11 +404,27 @@ function updateCart() {
         if (cartTotal) {
             cartTotal.textContent = `Total: $${total.toFixed(2)}`;
         }
+
+        // If the user isn't logged in, disable checkout buttons and show a prompt
+        const authNotice = document.getElementById('auth-notice');
+        if (authNotice) {
+            if (!isLoggedIn()) {
+                authNotice.textContent = 'Please login to checkout. Use the Login/Sign Up links above.';
+                if (paystackBtn) paystackBtn.disabled = true;
+                if (bankTransferBtn) bankTransferBtn.disabled = true;
+            } else {
+                authNotice.textContent = '';
+                if (paystackBtn) paystackBtn.disabled = false;
+                if (bankTransferBtn) bankTransferBtn.disabled = false;
+            }
+        }
     }
 }
 
 // Cart logic
 function addToCart(id, quantity = 1) {
+    if (!requireLogin('You must be logged in to add items to your cart.')) return;
+
     const item = products.find(p => p.id === id);
     if (!item) {
         console.log('Product not found');
@@ -422,6 +460,8 @@ function addToCart(id, quantity = 1) {
 
 // Direct add to cart (quick add from product list)
 function addToCartDirect(id, quantity = 1) {
+    if (!requireLogin('You must be logged in to add items to your cart.')) return;
+
     addToCart(id, quantity);
     
     // Show feedback on the button
@@ -525,6 +565,8 @@ function initiatePaystackPayment(email, amount) {
 // Checkout with Paystack
 if (paystackBtn) {
     paystackBtn.addEventListener("click", () => {
+        if (!requireLogin('You must be logged in to make a payment.')) return;
+
         if (cart.length === 0) {
             alert("Your cart is empty!");
             return;
@@ -616,6 +658,8 @@ Account Name: ${BANK_DETAILS.accountName}`;
 // Confirm bank payment
 if (confirmBankPaymentBtn) {
     confirmBankPaymentBtn.addEventListener("click", () => {
+        if (!requireLogin('You must be logged in to confirm a bank transfer.')) return;
+
         const totalAmount = cart.reduce((sum, item) => sum + item.price, 0);
         
         // Log bank transfer transaction
@@ -664,9 +708,15 @@ Please allow 24-48 hours for verification. You will receive a confirmation email
 
 // helper to POST transactions to backend
 function sendTransactionToServer(log) {
+    const token = getAuthToken();
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     fetch('http://localhost:4000/api/v1/transactions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify(log)
     })
     .then(res => res.json())
@@ -679,6 +729,21 @@ initPaystack();
 
 // Load cart on page load
 loadCart();
+
+// Render login/sign-up links in the header
+renderAuthLinks();
+
+// Protect cart icon link
+const cartIconLink = document.querySelector('#cart-icon a');
+if (cartIconLink) {
+    cartIconLink.addEventListener('click', (e) => {
+        if (!isLoggedIn()) {
+            e.preventDefault();
+            localStorage.setItem('redirectAfterLogin', 'cart.html');
+            window.location.href = 'login.html';
+        }
+    });
+}
 
 // Search
 function searchProduct(){

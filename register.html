@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Register - David Store</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <a href="index.html"><h2>🛍️ David Store</h2></a>
+  </header>
+
+  <main class="auth-container">
+    <h2>Create an account</h2>
+    <form id="registerForm">
+      <label for="fullName">Full Name</label>
+      <input id="fullName" name="fullName" type="text" required>
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required>
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required>
+
+      <label for="confirmPassword">Confirm Password</label>
+      <input id="confirmPassword" name="confirmPassword" type="password" required>
+
+      <button type="submit">Register</button>
+    </form>
+    <p>Already have an account? <a href="login.html">Login</a></p>
+    <div id="registerMessage" class="form-message"></div>
+  </main>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const msg = document.getElementById('registerMessage');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+
+      const fullName = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (password !== confirmPassword) {
+        msg.textContent = 'Passwords do not match';
+        msg.className = 'form-message error';
+        return;
+      }
+
+      try {
+        const res = await fetch('http://localhost:4000/api/v1/user/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fullName, email, password, confirmPassword })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          msg.textContent = data.message || 'Registration failed';
+          msg.className = 'form-message error';
+          return;
+        }
+
+        // Save user & token to localStorage
+        if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+        if (data.token) localStorage.setItem('token', data.token);
+
+        msg.textContent = 'Registration successful. Redirecting...';
+        msg.className = 'form-message success';
+        setTimeout(() => { 
+            const redirectUrl = localStorage.getItem('redirectAfterLogin') || 'index.html';
+            localStorage.removeItem('redirectAfterLogin');
+            window.location.href = redirectUrl; 
+        }, 1000);
+      } catch (err) {
+        msg.textContent = 'Network error';
+        msg.className = 'form-message error';
+      }
+    });
+  </script>
+</body>
+</html>

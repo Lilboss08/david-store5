@@ -16,6 +16,7 @@
         <h3>Your Shopping Cart</h3>
         <ul id="cart-item"></ul>
         <p id="cart-total">Total: $0</p>
+        <p id="auth-notice" class="auth-notice"></p>
         
         <div class="payment-section">
             <h4>Select Payment Method</h4>
@@ -130,6 +131,12 @@
             <p>All product names, logos, brands, and trademarks are the property of their respective owners.</p>
         </div>
     </footer>
+
+<!-- Auth check for cart page -->
+<script type="module">
+    import { protectPage } from '/src/auth.js';
+    protectPage();
+</script>
 
 <!-- load application code -->
 <script type="module" src="/src/main.js"></script>

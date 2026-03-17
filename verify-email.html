@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Email Verification - David Store</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <a href="index.html"><h2>🛍️ David Store</h2></a>
+  </header>
+
+  <main class="auth-container">
+    <h2>Email Verification</h2>
+    <div id="verificationMessage" class="form-message"></div>
+    <p><a href="login.html">Back to Login</a></p>
+  </main>
+
+  <script>
+    const msg = document.getElementById('verificationMessage');
+
+    // Get token from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    if (!token) {
+      msg.textContent = 'Invalid verification link.';
+      msg.className = 'form-message error';
+    } else {
+      // Verify email
+      fetch(`http://localhost:4000/api/v1/user/verify-email/${token}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            msg.textContent = data.message;
+            msg.className = 'form-message success';
+            // Redirect to login after 3 seconds
+            setTimeout(() => {
+              window.location.href = 'login.html';
+            }, 3000);
+          } else {
+            msg.textContent = data.message;
+            msg.className = 'form-message error';
+          }
+        })
+        .catch(err => {
+          msg.textContent = 'Verification failed. Please try again.';
+          msg.className = 'form-message error';
+        });
+    }
+  </script>
+</body>
+</html>
