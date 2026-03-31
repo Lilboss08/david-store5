@@ -26,6 +26,18 @@
       <label for="confirmPassword">Confirm Password</label>
       <input id="confirmPassword" name="confirmPassword" type="password" required>
 
+      <label for="role">Account Type</label>
+      <select id="role" name="role" required>
+        <option value="">-- Select Account Type --</option>
+        <option value="user">Regular User</option>
+        <option value="admin">Admin</option>
+      </select>
+
+      <div id="adminPasscodeField" style="display:none;">
+        <label for="adminPasscode">Admin Passcode</label>
+        <input id="adminPasscode" name="adminPasscode" type="password" placeholder="Enter admin passcode">
+      </div>
+
       <button type="submit">Register</button>
     </form>
     <p>Already have an account? <a href="login.html">Login</a></p>
@@ -35,6 +47,17 @@
   <script>
     const form = document.getElementById('registerForm');
     const msg = document.getElementById('registerMessage');
+    const roleSelect = document.getElementById('role');
+    const adminPasscodeContainer = document.getElementById('adminPasscodeField');
+
+    roleSelect.addEventListener('change', () => {
+      if (roleSelect.value === 'admin') {
+        adminPasscodeContainer.style.display = 'block';
+      } else {
+        adminPasscodeContainer.style.display = 'none';
+        document.getElementById('adminPasscode').value = '';
+      }
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -44,6 +67,33 @@
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
+      const role = document.getElementById('role').value;
+      const adminPasscode = document.getElementById('adminPasscode')?.value || '';
+
+      // Frontend validation
+      if (!fullName) {
+        msg.textContent = 'Full Name is required';
+        msg.className = 'form-message error';
+        return;
+      }
+
+      if (!email) {
+        msg.textContent = 'Email is required';
+        msg.className = 'form-message error';
+        return;
+      }
+
+      if (!password) {
+        msg.textContent = 'Password is required';
+        msg.className = 'form-message error';
+        return;
+      }
+
+      if (password.length < 8) {
+        msg.textContent = 'Password must be at least 8 characters long';
+        msg.className = 'form-message error';
+        return;
+      }
 
       if (password !== confirmPassword) {
         msg.textContent = 'Passwords do not match';
@@ -51,16 +101,44 @@
         return;
       }
 
+      if (!role) {
+        msg.textContent = 'Please select an account type';
+        msg.className = 'form-message error';
+        return;
+      }
+
+      if (role === 'admin' && !adminPasscode.trim()) {
+        msg.textContent = 'Admin passcode is required for admin registration';
+        msg.className = 'form-message error';
+        return;
+      }
+
       try {
+        msg.textContent = 'Registering...';
+        msg.className = 'form-message';
+
         const res = await fetch('http://localhost:4000/api/v1/user/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fullName, email, password, confirmPassword })
+          body: JSON.stringify({ fullName, email, password, confirmPassword, role, adminPasscode })
         });
-        const data = await res.json();
+
+        let data = {};
+        try {
+          const responseText = await res.text();
+          if (responseText) {
+            data = JSON.parse(responseText);
+          }
+        } catch (parseErr) {
+          console.error('Failed to parse response:', parseErr, 'Response status:', res.status);
+          throw new Error(`Server error (status: ${res.status}). Check console for details.`);
+        }
+
         if (!res.ok) {
-          msg.textContent = data.message || 'Registration failed';
+          const errorMsg = data?.message || `Server error (${res.status})`;
+          msg.textContent = errorMsg;
           msg.className = 'form-message error';
+          console.error('Registration error:', { status: res.status, data });
           return;
         }
 
@@ -76,7 +154,8 @@
             window.location.href = redirectUrl; 
         }, 1000);
       } catch (err) {
-        msg.textContent = 'Network error';
+        console.error('Network/fetch error:', err);
+        msg.textContent = `Error: ${err.message}`;
         msg.className = 'form-message error';
       }
     });

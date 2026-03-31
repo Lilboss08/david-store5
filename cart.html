@@ -12,19 +12,96 @@
         <a href="index.html">← Back to Shopping</a>
     </header>
 
-    <section class="cart" id="cart1">
-        <h3>Your Shopping Cart</h3>
-        <ul id="cart-item"></ul>
-        <p id="cart-total">Total: $0</p>
-        <p id="auth-notice" class="auth-notice"></p>
+    <section class="cart professional-cart" id="cart1">
+        <div class="cart-header">
+            <h3>🛒 Your Shopping Cart</h3>
+            <p id="cart-item-count">0 items</p>
+        </div>
         
-        <div class="payment-section">
-            <h4>Select Payment Method</h4>
-            <div class="payment-options">
-                <button id="paystack-btn" class="payment-btn paystack-option">💳 Pay with Paystack</button>
-                <button id="bank-transfer-btn" class="payment-btn bank-option">🏦 Bank Transfer</button>
+        <div class="cart-content">
+            <div class="cart-items-section">
+                <ul id="cart-item" class="cart-items-list"></ul>
+                <div id="empty-cart-message" class="empty-cart" style="display:none;">
+                    <p>Your cart is empty</p>
+                    <a href="index.html" class="continue-shopping-btn">Continue Shopping</a>
+                </div>
+            </div>
+            
+            <div class="cart-summary-section">
+                <div class="order-summary">
+                    <h4>Order Summary</h4>
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="cart-subtotal">$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Delivery Fee:</span>
+                        <span id="delivery-fee">$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Tax (7.5%):</span>
+                        <span id="cart-tax">$0.00</span>
+                    </div>
+                    <hr>
+                    <div class="summary-row total">
+                        <span>Total:</span>
+                        <span id="cart-total">$0.00</span>
+                    </div>
+                </div>
+
+                <div class="delivery-section">
+                    <h4>📦 Delivery Information</h4>
+                    <form id="delivery-form">
+                        <div class="form-group">
+                            <label for="fullName">Full Name:</label>
+                            <input type="text" id="fullName" name="fullName" required placeholder="Enter your full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number:</label>
+                            <input type="tel" id="phone" name="phone" required placeholder="+234 XXX XXX XXXX">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email Address:</label>
+                            <input type="email" id="email" name="email" required placeholder="your.email@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="state">State:</label>
+                            <select id="state" name="state" required>
+                                <option value="">Select your state</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="lga">Local Government Area:</label>
+                            <select id="lga" name="lga" required disabled>
+                                <option value="">Select your LGA</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Delivery Address:</label>
+                            <textarea id="address" name="address" required placeholder="Enter your complete delivery address"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="city">City/Town:</label>
+                            <input type="text" id="city" name="city" required placeholder="Enter your city/town">
+                        </div>
+                        <div class="delivery-fee-section">
+                            <h5>💰 Delivery Fee: <span id="calculated-delivery-fee">$0.00</span></h5>
+                            <small class="delivery-note">🚚 Delivery fees are calculated based on your location.</small>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="payment-section">
+                    <h4>💳 Select Payment Method</h4>
+                    <div class="payment-options">
+                        <button id="paystack-btn" class="payment-btn paystack-option">💳 Pay with Paystack</button>
+                        <button id="bank-transfer-btn" class="payment-btn bank-option">🏦 Bank Transfer</button>
+                    </div>
+                </div>
             </div>
         </div>
+        
+        <p id="auth-notice" class="auth-notice"></p>
     </section>
     
     <!-- Bank Account Details Modal -->
@@ -49,6 +126,18 @@
             </div>
             <button id="copy-details-btn" class="copy-btn">📋 Copy Account Details</button>
             <button id="confirm-bank-payment" class="confirm-btn">✓ I've Made the Transfer</button>
+        </div>
+    </div>
+
+    <!-- Order Success Modal -->
+    <div id="success-modal" class="modal">
+        <div class="modal-content success-content">
+            <span class="close">&times;</span>
+            <div class="success-icon">✓</div>
+            <h3>Order Placed Successfully!</h3>
+            <p>Thank you for your order. Your order ID is: <strong id="order-id"></strong></p>
+            <p>You will receive a confirmation email shortly.</p>
+            <button onclick="closeSuccessModal()" class="confirm-btn">Continue Shopping</button>
         </div>
     </div>
 
@@ -131,6 +220,513 @@
             <p>All product names, logos, brands, and trademarks are the property of their respective owners.</p>
         </div>
     </footer>
+
+<!-- Cart functionality script -->
+<script>
+    // Cart functionality for professional cart
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    let currentDeliveryFee = 0;
+
+    // Nigerian states data
+    const nigeriaStates = [
+        "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno",
+        "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT", "Gombe",
+        "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara",
+        "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau",
+        "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara"
+    ];
+
+    // Delivery fee structure
+    const deliveryFees = {
+        // Major cities with different fees
+        'Lagos': {
+            base: 5,
+            'Lagos Island': 3,
+            'Lagos Mainland': 4,
+            'Victoria Island': 4,
+            'Ikoyi': 4,
+            ' Lekki': 5,
+            'Ajah': 5,
+            'Epe': 7,
+            'Ibeju-Lekki': 6,
+            default: 5
+        },
+        'Abuja': {
+            base: 6,
+            'Abuja Municipal': 5,
+            'Gwagwalada': 6,
+            'Kuje': 7,
+            'Kwali': 8,
+            'Abaji': 8,
+            default: 6
+        },
+        'Rivers': {
+            base: 8,
+            'Port Harcourt': 6,
+            'Obio-Akpor': 7,
+            'Eleme': 9,
+            'Okrika': 10,
+            default: 8
+        },
+        // Other states base fees
+        default: {
+            base: 10,
+            'Capital City': 8,
+            default: 10
+        }
+    };
+
+    function calculateDeliveryFee(state, lga) {
+        if (!state) return 0;
+        
+        // Check if state has specific fees
+        if (deliveryFees[state]) {
+            const stateFees = deliveryFees[state];
+            if (typeof stateFees === 'object') {
+                // Try exact LGA match first
+                if (lga && stateFees[lga]) {
+                    return stateFees[lga];
+                }
+                // Try partial match
+                for (const [key, fee] of Object.entries(stateFees)) {
+                    if (key !== 'base' && key !== 'default' && lga && lga.toLowerCase().includes(key.toLowerCase())) {
+                        return fee;
+                    }
+                }
+                // Fall back to base or default
+                return stateFees.base || stateFees.default || 10;
+            }
+        }
+        
+        // Default for other states
+        if (lga && lga.toLowerCase().includes('capital')) {
+            return 8;
+        }
+        return 10;
+    }
+
+    function updateDeliveryFee() {
+        const state = document.getElementById('state').value;
+        const lga = document.getElementById('lga').value;
+        
+        currentDeliveryFee = calculateDeliveryFee(state, lga);
+        document.getElementById('calculated-delivery-fee').textContent = `$${currentDeliveryFee.toFixed(2)}`;
+        updateTotals();
+    }
+
+    async function loadNigerianStates() {
+        const stateSelect = document.getElementById('state');
+        
+        try {
+            // Try to load from backend first
+            const response = await fetch('http://localhost:4000/api/v1/location/states');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.states && Array.isArray(data.states)) {
+                    stateSelect.innerHTML = '<option value="">Select your state</option>';
+                    data.states.forEach(state => {
+                        stateSelect.innerHTML += `<option value="${state}">${state}</option>`;
+                    });
+                    return;
+                }
+            }
+        } catch (error) {
+            console.log('Backend not available, using local state data');
+        }
+        
+        // Fallback to local data
+        stateSelect.innerHTML = '<option value="">Select your state</option>';
+        nigeriaStates.forEach(state => {
+            stateSelect.innerHTML += `<option value="${state}">${state}</option>`;
+        });
+    }
+
+    async function loadLGAs(state) {
+        console.log('Loading LGAs for state:', state);
+        const lgaSelect = document.getElementById('lga');
+        
+        if (!lgaSelect) {
+            console.error('LGA select element not found!');
+            return;
+        }
+        
+        lgaSelect.disabled = true;
+        lgaSelect.innerHTML = '<option value="">Loading LGAs...</option>';
+        
+        if (!state) {
+            lgaSelect.innerHTML = '<option value="">Select your LGA</option>';
+            lgaSelect.disabled = true;
+            return;
+        }
+
+        try {
+            // Try to load from free Nigerian LGA API first
+            console.log('Fetching LGAs from free API...');
+            const apiUrl = `https://nga-states-lga.onrender.com/?state=${encodeURIComponent(state)}`;
+            const apiResponse = await fetch(apiUrl);
+            const text = await apiResponse.text();
+            
+            // Check if it's an error message
+            if (text.trim().startsWith('Error:')) {
+                console.warn(`Free API error for ${state}:`, text);
+            } else {
+                // Try to parse as JSON
+                const apiData = JSON.parse(text);
+                console.log('Free API response:', apiData);
+                
+                if (Array.isArray(apiData) && apiData.length > 0) {
+                    lgaSelect.innerHTML = '<option value="">Select your LGA</option>';
+                    apiData.forEach(lga => {
+                        lgaSelect.innerHTML += `<option value="${lga}">${lga}</option>`;
+                    });
+                    lgaSelect.disabled = false;
+                    console.log('LGAs loaded from free API:', apiData.length);
+                    return;
+                }
+            }
+        } catch (apiError) {
+            console.log('Free API not available, trying backend...', apiError);
+        }
+
+        try {
+            // Try to load from backend
+            console.log('Trying to fetch LGAs from backend...');
+            const response = await fetch(`http://localhost:4000/api/v1/location/lgas/${encodeURIComponent(state)}`);
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Backend response:', data);
+                if (data.lgas && Array.isArray(data.lgas)) {
+                    lgaSelect.innerHTML = '<option value="">Select your LGA</option>';
+                    data.lgas.forEach(lga => {
+                        lgaSelect.innerHTML += `<option value="${lga}">${lga}</option>`;
+                    });
+                    lgaSelect.disabled = false;
+                    console.log('LGAs loaded from backend:', data.lgas.length);
+                    return;
+                }
+            } else {
+                console.log('Backend returned error:', response.status);
+            }
+        } catch (error) {
+            console.log('Backend not available for LGAs, using fallback.', error);
+        }
+
+        // Complete LGA data for all Nigerian states
+        const allNigerianLGAs = {
+            'Abia': ['Aba North', 'Aba South', 'Arochukwu', 'Bende', 'Ikwano', 'Isiala Ngwa North', 'Isiala Ngwa South', 'Isuikwuato', 'Obingwa', 'Ohafia', 'Osisioma', 'Ugwunagbo', 'Ukwa West', 'Ukwa East', 'Umuahia North', 'Umuahia South'],
+            'Adamawa': ['Demsa', 'Fufore', 'Ganye', 'Girei', 'Gombi', 'Hong', 'Jada', 'Lamurde', 'Madagali', 'Maiha', 'Mayo-Belwa', 'Michika', 'Mubi North', 'Mubi South', 'Numan', 'Shelleng', 'Song', 'Toungo', 'Yola North', 'Yola South'],
+            'Akwa Ibom': ['Abak', 'Eastern Obolo', 'Eket', 'Esit-Eket', 'Ibeno', 'Ibesikpo-Asutan', 'Ibiono-Ibom', 'Ika', 'Ikono', 'Ikot Abasi', 'Ikot Ekpene', 'Ini', 'Itu', 'Mbo', 'Mkpat-Enin', 'Nsit-Atai', 'Nsit-Ibom', 'Nsit-Uyumth', 'Obot-Akara', 'Okobo', 'Onna', 'Oron', 'Oruk Anam', 'Ukanafun', 'Uruan', 'Urue-Offong/Oruko', 'Uyo'],
+            'Anambra': ['Aguata', 'Anambra East', 'Anambra West', 'Awka North', 'Awka South', 'Ayamelum', 'Dunukofia', 'Ekwusigo', 'Idemili North', 'Idemili South', 'Ihiala', 'Njikoka', 'Nnewi North', 'Nnewi South', 'Ogbaru', 'Onitsha North', 'Onitsha South', 'Orumba North', 'Orumba South', 'Oyi'],
+            'Bauchi': ['Alkaleri', 'Bauchi', 'Bogoro', 'Damban', 'Darazo', 'Dass', 'Gamawa', 'Ganjuwa', 'Giade', 'Itas/Gadau', 'Jama are', 'Katagum', 'Kirfi', 'Misau', 'Ningi', 'Shira', 'Tafawa-Balewa', 'Toro', 'Warji', 'Zaki'],
+            'Bayelsa': ['Brass', 'Ekeremor', 'Kolga', 'Nembe', 'Ogbia', 'Ovia North-East', 'Ovia South-West', 'Okpai', 'Sagbama', 'Southern Ijaw', 'Yenagoa'],
+            'Benue': ['Ado', 'Agatu', 'Apa', 'Buruku', 'Gboko', 'Guma', 'Gwer East', 'Gwer West', 'Katsina-Ala', 'Konshisha', 'Kwande', 'Logo', 'Makurdi', 'Obi', 'Ogbadibo', 'Oju', 'Okpokwu', 'Oturkpo', 'Tarkaa', 'Ukum', 'Ushongo', 'Vandeikya'],
+            'Borno': ['Abadam', 'Askira/Uba', 'Bama', 'Bayo', 'Biu', 'Chibok', 'Damboa', 'Dikwa', 'Gubio', 'Guzamala', 'Gwoza', 'Hawul', 'Jere', 'Kaga', 'Kala/Balge', 'Konduga', 'Kukawa', 'Kwaya Kusar', 'Mafa', 'Magumeri', 'Maiduguri', 'Marte', 'Monguno', 'Ngala', 'Nganzai', 'Shani'],
+            'Cross River': ['Abia', 'Akamkpa', 'Akpabuyo', 'Bekwarra', 'Biase', 'Boki', 'Calabar Municipal', 'Calabar South', 'Etung', 'Ikom', 'Obanliku', 'Obubra', 'Obudu', 'Odukpani', 'Ogoja', 'Yakurr', 'Yala'],
+            'Delta': ['Aniocha North', 'Aniocha South', 'Bomadi', 'Burutu', 'Ethiope East', 'Ethiope West', 'Ika North East', 'Ika South', 'Isoko North', 'Isoko South', 'Ndokwa East', 'Ndokwa West', 'Okpe', 'Oshimili North', 'Oshimili South', 'Patani', 'Sapele', 'Udu', 'Ughelli North', 'Ughelli South', 'Uvwie', 'Warri North', 'Warri South', 'Warri Central'],
+            'Ebonyi': ['Abakaliki', 'Afikpo North', 'Afikpo South', 'Ebonyi', 'Ezza North', 'Ezza South', 'Ikwo', 'Ishielu', 'Ivo', 'Izzi', 'Ohafia', 'Onicha'],
+            'Edo': ['Akoko-Edo', 'Egor', 'Esan Central', 'Esan North-East', 'Esan South-East', 'Esan West', 'Etsako Central', 'Etsako East', 'Etsako West', 'Igueben', 'Ikpoba-Okha', 'Oredo', 'Orhionmwon', 'Ovia North-East', 'Ovia South-West', 'Uhunmwonde'],
+            'Ekiti': ['Ado Ekiti', 'Efon', 'Ekiti East', 'Ekiti South-West', 'Ekiti West', 'Emure', 'Gbonyin', 'Ido Osi', 'Ijero', 'Ikere', 'Ikole', 'Ilejemeje', 'Irepodun/Ifelodun', 'Ise/Orun', 'Moba', 'Oye'],
+            'Enugu': ['Aninri', 'Awgu', 'Enugu East', 'Enugu North', 'Enugu South', 'Ezeagu', 'Igbo Etiti', 'Igbo Eze North', 'Igbo Eze South', 'Isi Uzo', 'Nkanu East', 'Nkanu West', 'Nsukka', 'Oji River', 'Udenu', 'Udi', 'Umu-Nnamdi'],
+            'FCT': ['Abaji', 'Abuja Municipal', 'Bwari', 'Gwagwalada', 'Kuje', 'Kwali'],
+            'Gombe': ['Balanga', 'Billiri', 'Dukku', 'Funakaye', 'Gombe', 'Kaltungo', 'Kwami', 'Nafada', 'Shongom', 'Yamaltu/Deba'],
+            'Imo': ['Aba North', 'Aba South', 'Ahiazu Mbaise', 'Ehime Mbano', 'Ezinihitte', 'Ideato North', 'Ideato South', 'Ihitte/Uboma', 'Ikeduru', 'Isiala Mbano', 'Isu', 'Mbaitoli', 'Ngor Okpala', 'Njaba', 'Nkwerre', 'Nwangele', 'Obowo', 'Oguta', 'Ohaji/Egbema', 'Okigwe', 'Orlu', 'Orsu', 'Oru East', 'Oru West', 'Owerri Municipal', 'Owerri North', 'Owerri West'],
+            'Jigawa': ['Auyo', 'Babura', 'Biriniwa', 'Birnin Kudu', 'Buji', 'Dutse', 'Gagarawa', 'Garki', 'Gumel', 'Guri', 'Gwaram', 'Gwiwa', 'Hadejia', 'Jahun', 'Kafin Hausa', 'Kaugama', 'Kazaure', 'Kiri Kasamma', 'Kiyawa', 'Kafin Hausa', 'Maigatari', 'Malam Madori', 'Miga', 'Ringim', 'Roni', 'Sule Tankarkar', 'Taura', 'Yankwashi'],
+            'Kaduna': ['Birnin Gwari', 'Chikun', 'Giwa', 'Igabi', 'Ikara', 'Jaba', 'Jemaa', 'Kachia', 'Kaduna North', 'Kaduna South', 'Kagarko', 'Kari', 'Kaura', 'Kauru', 'Kubau', 'Kudan', 'Lere', 'Makarfi', 'Sabon Gari', 'Sanga', 'Soba', 'Zaria'],
+            'Kano': ['Albasu', 'Bagwai', 'Bebeji', 'Bichi', 'Bunkure', 'Dala', 'Dambatta', 'Dawakin Kudu', 'Dawakin Tofa', 'Doguwa', 'Fagge', 'Gabasawa', 'Garko', 'Garun Mallam', 'Gaya', 'Gezawa', 'Gwale', 'Gwarzo', 'Kabo', 'Kano Municipal', 'Karaye', 'Kibiya', 'Kiru', 'Kumbotso', 'Kunchi', 'Kura', 'Madobi', 'Makoda', 'Minjibir', 'Nassarawa', 'Rano', 'Rimin Gado', 'Rogo', 'Shanono', 'Sumaila', 'Takai', 'Tarauni', 'Tofa', 'Tsanyawa', 'Tudun Wada', 'Ungogo', 'Warawa', 'Wudil'],
+            'Katsina': ['Bakori', 'Batagarawa', 'Batsari', 'Baure', 'Bindawa', 'Charanchi', 'Dandume', 'Danja', 'Dan Musa', 'Daura', 'Dutsi', 'Dutsin-Ma', 'Faskari', 'Funtua', 'Ingawa', 'Jibia', 'Kafur', 'Kaita', 'Kankara', 'Kankia', 'Katsina', 'Kurfi', 'Kusada', 'Mai Adua', 'Malumfashi', 'Mani', 'Mashi', 'Mikaski', 'Musawa', 'Rimi', 'Sabuwa', 'Safana', 'Sandamu', 'Zango'],
+            'Kebbi': ['Aleiro', 'Arewa Dandi', 'Argungu', 'Augie', 'Bagudo', 'Birnin Kebbi', 'Bunza', 'Dandi', 'Fakai', 'Gwandu', 'Jega', 'Kalgo', 'Koko/Besse', 'Maiyama', 'Ngaski', 'Rural', 'Sakaba', 'Shanga', 'Suru', 'Wasagu/Danko', 'Yauri', 'Zuru'],
+            'Kogi': ['Adavi', 'Ajaokuta', 'Ankpa', 'Bassa', 'Dekina', 'Ibaji', 'Idah', 'Igalamela-Odolu', 'Ijumu', 'Kabba/Bunu', 'Kogi', 'Lokoja', 'Mopa-Muro', 'Ofu', 'Ogori/Magongo', 'Okehi', 'Okene', 'Olamaboro', 'Omala', 'Yagba East', 'Yagba West'],
+            'Kwara': ['Asa', 'Baruten', 'Edu', 'Ekiti', 'Ifelodun', 'Ilorin East', 'Ilorin South', 'Ilorin West', 'Irepodun', 'Isin', 'Kaiama', 'Moro', 'Offa', 'Oke-Ero', 'Oyun', 'Pategi'],
+            'Lagos': ['Agege', 'Alimosho', 'Ajeromi-Ifelodun', 'Amuwo-Odofin', 'Apapa', 'Badagry', 'Epe', 'Eti-Osa', 'Ibeju-Lekki', 'Ifako-Ijaye', 'Ikeja', 'Ikorodu', 'Kosofe', 'Lagos Island', 'Lagos Mainland', 'Mushin', 'Ojo', 'Oshodi-Isolo', 'Shomolu', 'Surulere', 'Victoria Island', 'Yaba'],
+            'Nasarawa': ['Akwanga', 'Awe', 'Doma', 'Karu', 'Keana', 'Keffi', 'Kokona', 'Lafia', 'Nasarawa', 'Nasarawa Egon', 'Toto', 'Wamba'],
+            'Niger': ['Agaye', 'Bida', 'Borgu', 'Bosso', 'Chanchaga', 'Edatti', 'Edaki', 'Edu', 'Egbako', 'Enagi', 'Gardawa', 'Gbako', 'Katcha', 'Kontagora', 'Lapai', 'Lavun', 'Magama', 'Mariga', 'Mashegu', 'Mokwa', 'Moye', 'Paikoro', 'Rafi', 'Rijau', 'Shiroro', 'Suleja', 'Tafa', 'Wushishi'],
+            'Ogun': ['Abeokuta North', 'Abeokuta South', 'Ado-Odo/Ota', 'Egbado North', 'Egbado South', 'Ewekoro', 'Ifo', 'Ikenne', 'Imeko Afon', 'Ipokia', 'Obafemi Owode', 'Odeda', 'Odogbolu', 'Remo North', 'Remo South', 'Sagamu', 'Yewa North', 'Yewa South'],
+            'Ondo': ['Akoko North-East', 'Akoko North-West', 'Akoko South-East', 'Akoko South-West', 'Akure North', 'Akure South', 'Odigbo', 'Oka-Akoko', 'Okeigbo', 'Owo', 'Ondo East', 'Ondo West', 'Idanre', 'Ifedayo', 'Ile-Oluji/Okeigbo', 'Irele'],
+            'Osun': ['Aiyedaade', 'Aiyedire', 'Atakunmosa East', 'Atakunmosa West', 'Atisbo', 'Boripe', 'Ede North', 'Ede South', 'Egbedore', 'Ejedebirin', 'Eri-Odan', 'Ife Central', 'Ife East', 'Ife North', 'Ife South', 'Ilesa East', 'Ilesa West', 'Irepodun', 'Irewole', 'Isokan', 'Iwo', 'Obokun', 'Odo-Otin', 'Ola Oluwa', 'Olorunda', 'Oriade', 'Orolu', 'Osogbo'],
+            'Oyo': ['Akinyele', 'Atiba', 'Atisbo', 'Egbeda', 'Ibadan North', 'Ibadan North-East', 'Ibadan North-West', 'Ibadan South-East', 'Ibadan South-West', 'Ibarapa Central', 'Ibarapa East', 'Ibarapa North', 'Ido', 'Iseyin', 'Itesiwaju', 'Iwajowa', 'Kajola', 'Lagelu', 'Ogbomoso North', 'Ogbomoso South', 'Ogo Oluwa', 'Olorunsogo', 'Oluyole', 'Ona-Ara', 'Orelope', 'Ori Ire', 'Oyo', 'Oyo East', 'Saki East', 'Saki West', 'Surulere'],
+            'Plateau': ['Barkin Ladi', 'Bassa', 'Bokkos', 'Jos East', 'Jos North', 'Jos South', 'Kanam', 'Kanke', 'Langtang North', 'Langtang South', 'Mangu', 'Mikang', 'Pankshin', 'Kanam', 'Qua\'an Pan', 'Riyom', 'Shendam', 'Wase'],
+            'Rivers': ['Abua/Odhia', 'Ahoada East', 'Ahoada West', 'Akuku-Toru', 'Andoni', 'Asari-Toru', 'Bonny', 'Degema', 'Eleme', 'Emohua', 'Etche', 'Gokana', 'Ikwerre', 'Khana', 'Obio/Akpor', 'Ogba/Egbema/Ndoni', 'Ogu/Bolo', 'Okrika', 'Omuma', 'Opobo/Nkoro', 'Oyigbo', 'Port Harcourt', 'Tai'],
+            'Sokoto': ['Binji', 'Bodinga', 'Dange', 'Gada', 'Goronyo', 'Gudu', 'Gwadabawa', 'Illela', 'Isa', 'Kebbe', 'Kware', 'Raba', 'Sabon Birni', 'Shagari', 'Silame', 'Sokoto North', 'Sokoto South', 'Tambuwal', 'Tangaza', 'Tureta', 'Wamakko', 'Wurno', 'Yabo'],
+            'Taraba': ['Ardo Kola', 'Bali', 'Donga', 'Gashaka', 'Gassol', 'Ibi', 'Jalingo', 'Karim-Lamido', 'Kumi', 'Lau', 'Sardauna', 'Takum', 'Ussa', 'Wukari', 'Yorro', 'Zing'],
+            'Yobe': ['Bade', 'Bursari', 'Damaturu', 'Fika', 'Fune', 'Geidam', 'Gujba', 'Gulani', 'Jakusko', 'Karasuwa', 'Karawa', 'Machina', 'Nangere', 'Nguru', 'Potiskum', 'Tarmuwa', 'Yusufari'],
+            'Zamfara': ['Anka', 'Bakura', 'Birnin Magaji/Kiyaw', 'Bukkuyum', 'Chafe', 'Gummi', 'Gusau', 'Kaura Namoda', 'Maradun', 'Marnona', 'Shinkafi', 'Talata Mafara', 'Zurmi']
+        };
+
+        console.log('Using fallback LGAs for:', state);
+        const stateLGAs = allNigerianLGAs[state] || [];
+        lgaSelect.innerHTML = '<option value="">Select your LGA</option>';
+        
+        if (stateLGAs.length > 0) {
+            stateLGAs.forEach(lga => {
+                lgaSelect.innerHTML += `<option value="${lga}">${lga}</option>`;
+            });
+            lgaSelect.disabled = false;
+            console.log('LGAs loaded from fallback:', stateLGAs.length);
+        } else {
+            lgaSelect.innerHTML = '<option value="">No LGAs available</option>';
+            console.error('No LGAs found for state:', state);
+        }
+    }
+
+    function updateCartDisplay() {
+        const cartItemsList = document.getElementById('cart-item');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const cartItemCount = document.getElementById('cart-item-count');
+        
+        if (cart.length === 0) {
+            cartItemsList.style.display = 'none';
+            emptyCartMessage.style.display = 'block';
+            cartItemCount.textContent = '0 items';
+            updateTotals();
+            return;
+        }
+
+        cartItemsList.style.display = 'block';
+        emptyCartMessage.style.display = 'none';
+        cartItemCount.textContent = `${cart.length} item${cart.length > 1 ? 's' : ''}`;
+
+        cartItemsList.innerHTML = cart.map((item, index) => `
+            <li>
+                <div class="cart-item-info">
+                    <strong>${item.name}</strong>
+                    <span class="cart-item-price">$${item.price.toFixed(2)} × ${item.quantity}</span>
+                </div>
+                <div class="cart-item-controls">
+                    <button onclick="updateQuantity(${index}, -1)">-</button>
+                    <span>${item.quantity}</span>
+                    <button onclick="updateQuantity(${index}, 1)">+</button>
+                    <button class="remove-btn" onclick="removeFromCart(${index})">🗑️</button>
+                </div>
+            </li>
+        `).join('');
+
+        updateTotals();
+    }
+
+    function updateQuantity(index, change) {
+        cart[index].quantity += change;
+        if (cart[index].quantity <= 0) {
+            cart.splice(index, 1);
+        }
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartDisplay();
+    }
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartDisplay();
+        showNotification('Item removed from cart', 'info');
+    }
+
+    function updateTotals() {
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const tax = subtotal * 0.075;
+        const total = subtotal + currentDeliveryFee + tax;
+
+        document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+        document.getElementById('delivery-fee').textContent = `$${currentDeliveryFee.toFixed(2)}`;
+        document.getElementById('cart-tax').textContent = `$${tax.toFixed(2)}`;
+        document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
+        document.getElementById('bank-amount').textContent = `$${total.toFixed(2)}`;
+    }
+
+    function validateDeliveryForm() {
+        const requiredFields = ['fullName', 'phone', 'email', 'address', 'city', 'state', 'lga'];
+        for (const field of requiredFields) {
+            const element = document.getElementById(field);
+            if (!element || !element.value.trim()) {
+                showNotification(`Please fill in ${field.replace('-', ' ')}`, 'error');
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification-toast ${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 9999;
+            font-size: 14px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease-out;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease-in';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    function closeSuccessModal() {
+        document.getElementById('success-modal').style.display = 'none';
+        localStorage.removeItem('cart');
+        window.location.href = 'index.html';
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Cart page loaded, initializing...');
+        updateCartDisplay();
+        loadNigerianStates();
+
+        // State change event
+        const stateSelect = document.getElementById('state');
+        if (stateSelect) {
+            console.log('State select found, adding event listener');
+            stateSelect.addEventListener('change', function() {
+                console.log('State changed to:', this.value);
+                loadLGAs(this.value);
+                updateDeliveryFee();
+            });
+        } else {
+            console.error('State select not found!');
+        }
+
+        // LGA change event
+        const lgaSelect = document.getElementById('lga');
+        if (lgaSelect) {
+            console.log('LGA select found, adding event listener');
+            lgaSelect.addEventListener('change', updateDeliveryFee);
+        } else {
+            console.error('LGA select not found!');
+        }
+
+        // Payment buttons
+        const paystackBtn = document.getElementById('paystack-btn');
+        const bankTransferBtn = document.getElementById('bank-transfer-btn');
+
+        if (paystackBtn) {
+            paystackBtn.addEventListener('click', function() {
+                if (!validateDeliveryForm()) return;
+                if (cart.length === 0) {
+                    showNotification('Your cart is empty', 'error');
+                    return;
+                }
+                showNotification('Paystack integration coming soon!', 'info');
+            });
+        }
+
+        if (bankTransferBtn) {
+            bankTransferBtn.addEventListener('click', function() {
+                if (!validateDeliveryForm()) return;
+                if (cart.length === 0) {
+                    showNotification('Your cart is empty', 'error');
+                    return;
+                }
+                document.getElementById('bank-modal').style.display = 'block';
+            });
+        }
+
+        // Modal close buttons
+        const modals = document.querySelectorAll('.modal .close');
+        modals.forEach(closeBtn => {
+            closeBtn.addEventListener('click', function() {
+                this.closest('.modal').style.display = 'none';
+            });
+        });
+
+        // Copy bank details
+        const copyBtn = document.getElementById('copy-details-btn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                const details = 'Bank: OPAY\nAccount: 8067080261\nName: NOTOMA DAVID GODSFAVOUR';
+                navigator.clipboard.writeText(details);
+                showNotification('Bank details copied!', 'success');
+            });
+        }
+
+        // Confirm bank payment
+        const confirmBtn = document.getElementById('confirm-bank-payment');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                document.getElementById('bank-modal').style.display = 'none';
+                document.getElementById('order-id').textContent = 'DS' + Date.now();
+                document.getElementById('success-modal').style.display = 'block';
+            });
+        }
+    });
+
+    // Add CSS animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        .cart-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+        .cart-item-price {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cart-item-controls button {
+            padding: 8px 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .cart-item-controls button:hover {
+            background: var(--primary-dark);
+        }
+        .cart-item-controls .remove-btn {
+            background: #dc3545;
+        }
+        .cart-item-controls .remove-btn:hover {
+            background: #c82333;
+        }
+        .success-content {
+            text-align: center;
+            padding: 30px;
+        }
+        .success-icon {
+            font-size: 60px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        .delivery-fee-section {
+            background: var(--bg-lighter);
+            padding: 15px;
+            border-radius: var(--radius-sm);
+            margin-top: 15px;
+            border: 2px solid var(--primary-color);
+        }
+        .delivery-fee-section h5 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.1em;
+        }
+    `;
+    document.head.appendChild(style);
+</script>
 
 <!-- Auth check for cart page -->
 <script type="module">

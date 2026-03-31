@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Product Management</title>
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+    <header>
+        <a href="index.html" style="text-decoration: none;"><h2>🛍️ David Store - Admin</h2></a>
+        <div id="auth-links" class="auth-links"></div>
+    </header>
+
+    <main class="admin-panel">
+        <h2>Admin Product Management</h2>
+        <div id="adminMessage" class="form-message"></div>
+        <form id="adminProductForm">
+            <input type="hidden" id="productId" value="" />
+            <div>
+                <label for="prodTitle">Title</label>
+                <input id="prodTitle" required />
+            </div>
+            <div>
+                <label for="prodDescription">Description</label>
+                <input id="prodDescription" />
+            </div>
+            <div>
+                <label for="prodPrice">Price</label>
+                <input id="prodPrice" type="number" min="0" step="0.01" required />
+            </div>
+            <div>
+                <label for="prodCategory">Category</label>
+                <input id="prodCategory" />
+            </div>
+            <div>
+                <label for="prodImage">Image URL</label>
+                <input id="prodImage" />
+            </div>
+            <div>
+                <label for="prodStock">Stock</label>
+                <input id="prodStock" type="number" min="0" step="1" value="0" required />
+            </div>
+            <button type="submit" class="add-btn">Save Product</button>
+            <button type="button" id="clearForm" class="delete-btn">Clear</button>
+        </form>
+
+        <h3>Products</h3>
+        <table id="productsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </main>
+
+    <script type="module" src="./src/admin.js"></script>
+</body>
+</html>

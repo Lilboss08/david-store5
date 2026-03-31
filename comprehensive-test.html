@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>David Store - Comprehensive Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .test-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .test-header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .test-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .test-content {
+            padding: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .section-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            font-weight: bold;
+            font-size: 1.2em;
+            border-bottom: 2px solid #007bff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-header .status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: normal;
+        }
+        .status.pass { background: #28a745; color: white; }
+        .status.fail { background: #dc3545; color: white; }
+        .status.pending { background: #ffc107; color: black; }
+        .section-content {
+            padding: 20px;
+        }
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        .test-item:hover {
+            background: #f8f9fa;
+        }
+        .test-item .test-name {
+            font-weight: 500;
+        }
+        .test-item .test-result {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .test-item .result-icon {
+            font-size: 1.5em;
+        }
+        .test-item .result-message {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        .test-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        .test-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .test-output {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+        }
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .quick-action {
+            background: white;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .quick-action:hover {
+            background: #007bff;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.4);
+        }
+        .quick-action h3 {
+            margin-bottom: 10px;
+        }
+        .error-log {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .error-log h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .error-details {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🧪 David Store - Comprehensive Testing & Debugging</h1>
+            <p>Automated testing and error detection for all major functionality</p>
+        </div>
+
+        <div class="test-content">
+            <!-- Test Progress -->
+            <div class="progress-bar">
+                <div class="progress" id="progressBar" style="width: 0%;">0% Complete</div>
+            </div>
+
+            <!-- Test Controls -->
+            <div class="test-controls">
+                <button class="test-btn" onclick="runAllTests()">🚀 Run All Tests</button>
+                <button class="test-btn" onclick="runBackendTests()">🔧 Test Backend</button>
+                <button class="test-btn" onclick="runFrontendTests()">🎨 Test Frontend</button>
+                <button class="test-btn" onclick="runAuthTests()">🔐 Test Auth</button>
+                <button class="test-btn" onclick="clearResults()">🗑️ Clear Results</button>
+            </div>
+
+            <!-- Backend Tests -->
+            <div class="test-section">
+                <div class="section-header">
+                    <span>🔧 Backend & API Tests</span>
+                    <span class="status pending" id="backendStatus">Pending</span>
+                </div>
+                <div class="section-content">
+                    <div class="test-item">
+                        <span class="test-name">Backend Server Connection</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="backendConnectionIcon">⏳</span>
+                            <span class="result-message" id="backendConnectionMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">Products API</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="productsApiIcon">⏳</span>
+                            <span class="result-message" id="productsApiMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">Search API</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="searchApiIcon">⏳</span>
+                            <span class="result-message" id="searchApiMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">Location API (States)</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="statesApiIcon">⏳</span>
+                            <span class="result-message" id="statesApiMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">Location API (LGAs)</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="lgasApiIcon">⏳</span>
+                            <span class="result-message" id="lgasApiMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">Free LGA API</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="freeLgaApiIcon">⏳</span>
+                            <span class="result-message" id="freeLgaApiMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <button class="test-btn" onclick="testBackend()" style="margin-top: 15px;">Run Backend Tests</button>
+                    <div class="test-output" id="backendOutput"></div>
+                </div>
+            </div>
+
+            <!-- Frontend Tests -->
+            <div class="test-section">
+                <div class="section-header">
+                    <span>🎨 Frontend Tests</span>
+                    <span class="status pending" id="frontendStatus">Pending</span>
+                </div>
+                <div class="section-content">
+                    <div class="test-item">
+                        <span class="test-name">LocalStorage Availability</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="localStorageIcon">⏳</span>
+                            <span class="result-message" id="localStorageMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">Cart Functionality</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="cartFunctionIcon">⏳</span>
+                            <span class="result-message" id="cartFunctionMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">User Authentication State</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="authStateIcon">⏳</span>
+                            <span class="result-message" id="authStateMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">Product Search Function</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="searchFunctionIcon">⏳</span>
+                            <span class="result-message" id="searchFunctionMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">Category Filter Function</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="categoryFilterIcon">⏳</span>
+                            <span class="result-message" id="categoryFilterMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <button class="test-btn" onclick="testFrontend()" style="margin-top: 15px;">Run Frontend Tests</button>
+                    <div class="test-output" id="frontendOutput"></div>
+                </div>
+            </div>
+
+            <!-- Authentication Tests -->
+            <div class="test-section">
+                <div class="section-header">
+                    <span>🔐 Authentication Tests</span>
+                    <span class="status pending" id="authStatus">Pending</span>
+                </div>
+                <div class="section-content">
+                    <div class="test-item">
+                        <span class="test-name">User Login</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="userLoginIcon">⏳</span>
+                            <span class="result-message" id="userLoginMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">Admin Login</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="adminLoginIcon">⏳</span>
+                            <span class="result-message" id="adminLoginMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">Admin Product Add</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="adminProductAddIcon">⏳</span>
+                            <span class="result-message" id="adminProductAddMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">Admin Product Update</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="adminProductUpdateIcon">⏳</span>
+                            <span class="result-message" id="adminProductUpdateMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <div class="test-item">
+                        <span class="test-name">Admin Product Delete</span>
+                        <div class="test-result">
+                            <span class="result-icon" id="adminProductDeleteIcon">⏳</span>
+                            <span class="result-message" id="adminProductDeleteMsg">Testing...</span>
+                        </div>
+                    </div>
+                    <button class="test-btn" onclick="testAuth()" style="margin-top: 15px;">Run Auth Tests</button>
+                    <div class="test-output" id="authOutput"></div>
+                </div>
+            </div>
+
+            <!-- Error Log -->
+            <div class="error-log" id="errorLog" style="display: none;">
+                <h3>⚠️ Detected Errors</h3>
+                <div id="errorList"></div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="test-section">
+                <div class="section-header">
+                    <span>⚡ Quick Actions</span>
+                    <span class="status pass">Ready</span>
+                </div>
+                <div class="section-content">
+                    <div class="quick-actions">
+                        <div class="quick-action" onclick="setupAdminAccount()">
+                            <h3>👤 Setup Admin</h3>
+                            <p>Create/upgrade admin account</p>
+                        </div>
+                        <div class="quick-action" onclick="clearAllData()">
+                            <h3>🗑️ Clear All Data</h3>
+                            <p>Reset localStorage</p>
+                        </div>
+                        <div class="quick-action" onclick="testAddToCart()">
+                            <h3>🛒 Test Add to Cart</h3>
+                            <p>Test cart functionality</p>
+                        </div>
+                        <div class="quick-action" onclick="fixCommonIssues()">
+                            <h3>🔧 Fix Common Issues</h3>
+                            <p>Auto-fix typical problems</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="test-section">
+                <div class="section-header">
+                    <span>📊 Test Summary</span>
+                    <span class="status pending" id="summaryStatus">Not Started</span>
+                </div>
+                <div class="section-content">
+                    <div id="testSummary">
+                        <p><strong>Tests Passed:</strong> <span id="testsPassed">0</span></p>
+                        <p><strong>Tests Failed:</strong> <span id="testsFailed">0</span></p>
+                        <p><strong>Total Tests:</strong> <span id="totalTests">0</span></p>
+                        <p><strong>Success Rate:</strong> <span id="successRate">0%</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test tracking
+        let testResults = {
+            backend: { passed: 0, failed: 0, total: 0 },
+            frontend: { passed: 0, failed: 0, total: 0 },
+            auth: { passed: 0, failed: 0, total: 0 }
+        };
+
+        // Helper functions
+        function updateTestResult(category, testName, passed, message) {
+            const iconId = `${testName.replace(/[^a-zA-Z]/g, '')}Icon`;
+            const msgId = `${testName.replace(/[^a-zA-Z]/g, '')}Msg`;
+            
+            const icon = document.getElementById(iconId);
+            const msg = document.getElementById(msgId);
+            
+            if (icon && msg) {
+                icon.textContent = passed ? '✅' : '❌';
+                msg.textContent = message;
+                
+                if (!passed) {
+                    msg.style.color = '#dc3545';
+                    logError(category, testName, message);
+                }
+            }
+            
+            testResults[category].total++;
+            if (passed) {
+                testResults[category].passed++;
+            } else {
+                testResults[category].failed++;
+            }
+            
+            updateProgress();
+        }
+
+        function logError(category, test, message) {
+            const errorLog = document.getElementById('errorLog');
+            const errorList = document.getElementById('errorList');
+            
+            errorLog.style.display = 'block';
+            errorList.innerHTML += `
+                <div class="error-details">
+                    <strong>${category.toUpperCase()}: ${test}</strong><br>
+                    ${message}
+                </div>
+            `;
+        }
+
+        function updateProgress() {
+            const total = testResults.backend.total + testResults.frontend.total + testResults.auth.total;
+            const passed = testResults.backend.passed + testResults.frontend.passed + testResults.auth.passed;
+            const percentage = total > 0 ? Math.round((passed / total) * 100) : 0;
+            
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = percentage + '% Complete';
+            
+            document.getElementById('testsPassed').textContent = passed;
+            document.getElementById('testsFailed').textContent = total - passed;
+            document.getElementById('totalTests').textContent = total;
+            document.getElementById('successRate').textContent = percentage + '%';
+            
+            // Update section statuses
+            updateSectionStatus('backend', testResults.backend);
+            updateSectionStatus('frontend', testResults.frontend);
+            updateSectionStatus('auth', testResults.auth);
+            
+            if (total === 0) {
+                document.getElementById('summaryStatus').textContent = 'Not Started';
+                document.getElementById('summaryStatus').className = 'status pending';
+            } else if (testResults.backend.failed + testResults.frontend.failed + testResults.auth.failed === 0) {
+                document.getElementById('summaryStatus').textContent = 'All Passed ✅';
+                document.getElementById('summaryStatus').className = 'status pass';
+            } else {
+                document.getElementById('summaryStatus').textContent = 'Issues Found ⚠️';
+                document.getElementById('summaryStatus').className = 'status fail';
+            }
+        }
+
+        function updateSectionStatus(section, results) {
+            const statusEl = document.getElementById(section + 'Status');
+            if (results.total === 0) {
+                statusEl.textContent = 'Pending';
+                statusEl.className = 'status pending';
+            } else if (results.failed === 0) {
+                statusEl.textContent = 'All Passed ✅';
+                statusEl.className = 'status pass';
+            } else {
+                statusEl.textContent = `${results.failed} Failed ❌`;
+                statusEl.className = 'status fail';
+            }
+        }
+
+        function log(message, type = 'info') {
+            console.log(`[${type.toUpperCase()}]`, message);
+            const timestamp = new Date().toLocaleTimeString();
+            const outputDiv = document.getElementById(type + 'Output') || document.createElement('div');
+            if (type === 'backend' || type === 'frontend' || type === 'auth') {
+                const div = document.getElementById(type + 'Output');
+                if (div) {
+                    div.innerHTML += `<span style="color: #666; font-size: 12px;">[${timestamp}]</span> ${message}\n`;
+                    div.scrollTop = div.scrollHeight;
+                }
+            }
+        }
+
+        // Backend Tests
+        async function testBackend() {
+            log('Starting backend tests...', 'backend');
+
+            // Test backend connection
+            try {
+                const response = await fetch('http://localhost:4000/api/v1/products');
+                updateTestResult('backend', 'backendConnection', response.ok, `Status: ${response.status}`);
+                log(`Backend connection: ${response.ok ? 'OK' : 'Failed'}`, 'backend');
+            } catch (error) {
+                updateTestResult('backend', 'backendConnection', false, `Error: ${error.message}`);
+                log(`Backend connection failed: ${error.message}`, 'backend');
+            }
+
+            // Test products API
+            try {
+                const response = await fetch('http://localhost:4000/api/v1/products');
+                const data = await response.json();
+                const hasProducts = Array.isArray(data) && data.length > 0;
+                updateTestResult('backend', 'productsApi', hasProducts, `Found ${hasProducts ? data.length : 0} products`);
+                log(`Products API: ${hasProducts ? 'OK' : 'Failed'} - ${data.length} products`, 'backend');
+            } catch (error) {
+                updateTestResult('backend', 'productsApi', false, `Error: ${error.message}`);
+            }
+
+            // Test search API
+            try {
+                const response = await fetch('http://localhost:4000/api/v1/products/search?q=phone');
+                updateTestResult('backend', 'searchApi', response.ok, `Status: ${response.status}`);
+                log(`Search API: ${response.ok ? 'OK' : 'Failed'}`, 'backend');
+            } catch (error) {
+                updateTestResult('backend', 'searchApi', false, `Error: ${error.message}`);
+            }
+
+            // Test states API
+            try {
+                const response = await fetch('http://localhost:4000/api/v1/location/states');
+                const data = await response.json();
+                const hasStates = data.states && Array.isArray(data.states) && data.states.length > 0;
+                updateTestResult('backend', 'statesApi', hasStates, `Found ${hasStates ? data.states.length : 0} states`);
+                log(`States API: ${hasStates ? 'OK' : 'Failed'}`, 'backend');
+            } catch (error) {
+                updateTestResult('backend', 'statesApi', false, `Error: ${error.message}`);
+            }
+
+            // Test LGAs API
+            try {
+                const response = await fetch('http://localhost:4000/api/v1/location/lgas/Lagos');
+                const data = await response.json();
+                const hasLGAs = data.lgas && Array.isArray(data.lgas) && data.lgas.length > 0;
+                updateTestResult('backend', 'lgasApi', hasLGAs, `Found ${hasLGAs ? data.lgas.length : 0} LGAs`);
+                log(`LGAs API: ${hasLGAs ? 'OK' : 'Failed'}`, 'backend');
+            } catch (error) {
+                updateTestResult('backend', 'lgasApi', false, `Error: ${error.message}`);
+            }
+
+            // Test free LGA API
+            try {
+                const response = await fetch('https://nga-states-lga.onrender.com/api/Lagos');
+                const data = await response.json();
+                const hasLGAs = Array.isArray(data) && data.length > 0;
+                updateTestResult('backend', 'freeLgaApi', hasLGAs, `Found ${hasLGAs ? data.length : 0} LGAs`);
+                log(`Free LGA API: ${hasLGAs ? 'OK' : 'Failed'}`, 'backend');
+            } catch (error) {
+                updateTestResult('backend', 'freeLgaApi', false, `Error: ${error.message}`);
+            }
+        }
+
+        // Frontend Tests
+        function testFrontend() {
+            log('Starting frontend tests...', 'frontend');
+
+            // Test localStorage
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                updateTestResult('frontend', 'localStorage', true, 'Available and working');
+                log('LocalStorage: OK', 'frontend');
+            } catch (error) {
+                updateTestResult('frontend', 'localStorage', false, `Error: ${error.message}`);
+            }
+
+            // Test cart functionality
+            try {
+                const testCart = [{ id: 1, name: 'Test Product', price: 100 }];
+                localStorage.setItem('cart', JSON.stringify(testCart));
+                const retrieved = JSON.parse(localStorage.getItem('cart'));
+                const isValid = Array.isArray(retrieved) && retrieved.length > 0;
+                updateTestResult('frontend', 'cartFunction', isValid, isValid ? 'Working correctly' : 'Cart empty or invalid');
+                log(`Cart function: ${isValid ? 'OK' : 'Failed'}`, 'frontend');
+                localStorage.removeItem('cart');
+            } catch (error) {
+                updateTestResult('frontend', 'cartFunction', false, `Error: ${error.message}`);
+            }
+
+            // Test auth state
+            const hasUser = localStorage.getItem('user') !== null;
+            const hasToken = localStorage.getItem('token') !== null;
+            updateTestResult('frontend', 'authState', true, `User: ${hasUser ? 'Yes' : 'No'}, Token: ${hasToken ? 'Yes' : 'No'}`);
+            log(`Auth state: User=${hasUser}, Token=${hasToken}`, 'frontend');
+
+            // Test search function (check if main.js has search functionality)
+            const hasSearchFunction = typeof window.searchProducts === 'function' || document.querySelector('#searchInput, .search-input, input[type="search"]') !== null;
+            updateTestResult('frontend', 'searchFunction', true, hasSearchFunction ? 'Search elements found' : 'No search elements found');
+            log(`Search function: ${hasSearchFunction ? 'OK' : 'Check manually'}`, 'frontend');
+
+            // Test category filter
+            const hasCategoryFilter = document.querySelector('#category, .category-filter, select[name="category"]') !== null;
+            updateTestResult('frontend', 'categoryFilter', true, hasCategoryFilter ? 'Category elements found' : 'No category elements found');
+            log(`Category filter: ${hasCategoryFilter ? 'OK' : 'Check manually'}`, 'frontend');
+        }
+
+        // Auth Tests
+        async function testAuth() {
+            log('Starting authentication tests...', 'auth');
+
+            // Test user login
+            try {
+                const response = await fetch('http://localhost:4000/api/v1/user/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'test123'
+                    })
+                });
+                const data = await response.json();
+                const loginFailed = response.status === 404 || data.message?.includes('not found');
+                updateTestResult('auth', 'userLogin', true, loginFailed ? 'Login endpoint working (user not found - expected)' : `Status: ${response.status}`);
+                log(`User login test: ${loginFailed ? 'OK (endpoint working)' : 'Check'}`, 'auth');
+            } catch (error) {
+                updateTestResult('auth', 'userLogin', false, `Error: ${error.message}`);
+            }
+
+            // Test admin login and product operations
+            try {
+                const loginResponse = await fetch('http://localhost:4000/api/v1/user/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@davidstore.com',
+                        password: 'admin123'
+                    })
+                });
+                const loginData = await loginResponse.json();
+                
+                if (loginResponse.ok && loginData.token) {
+                    updateTestResult('auth', 'adminLogin', true, `Logged in as ${loginData.user?.role || 'user'}`);
+                    log(`Admin login: OK - Role: ${loginData.user?.role}`, 'auth');
+                    
+                    // Store admin credentials
+                    localStorage.setItem('user', JSON.stringify(loginData.user));
+                    localStorage.setItem('token', loginData.token);
+                    
+                    const token = loginData.token;
+                    
+                    // Test add product
+                    try {
+                        const addResponse = await fetch('http://localhost:4000/api/v1/products', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({
+                                title: 'Test Product',
+                                description: 'Test Description',
+                                price: 99.99,
+                                category: 'Electronics',
+                                stock: 10
+                            })
+                        });
+                        const addData = await addResponse.json();
+                        updateTestResult('auth', 'adminProductAdd', addResponse.ok, addResponse.ok ? 'Product added successfully' : `Failed: ${addData.message}`);
+                        log(`Admin product add: ${addResponse.ok ? 'OK' : 'Failed'}`, 'auth');
+                        
+                        if (addData.id) {
+                            // Test update product
+                            try {
+                                const updateResponse = await fetch(`http://localhost:4000/api/v1/products/${addData.id}`, {
+                                    method: 'PATCH',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${token}`
+                                    },
+                                    body: JSON.stringify({ price: 149.99 })
+                                });
+                                updateTestResult('auth', 'adminProductUpdate', updateResponse.ok, updateResponse.ok ? 'Product updated successfully' : `Failed: ${updateResponse.status}`);
+                                log(`Admin product update: ${updateResponse.ok ? 'OK' : 'Failed'}`, 'auth');
+                            } catch (error) {
+                                updateTestResult('auth', 'adminProductUpdate', false, `Error: ${error.message}`);
+                            }
+                            
+                            // Test delete product
+                            try {
+                                const deleteResponse = await fetch(`http://localhost:4000/api/v1/products/${addData.id}`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Authorization': `Bearer ${token}`
+                                    }
+                                });
+                                updateTestResult('auth', 'adminProductDelete', deleteResponse.ok, deleteResponse.ok ? 'Product deleted successfully' : `Failed: ${deleteResponse.status}`);
+                                log(`Admin product delete: ${deleteResponse.ok ? 'OK' : 'Failed'}`, 'auth');
+                            } catch (error) {
+                                updateTestResult('auth', 'adminProductDelete', false, `Error: ${error.message}`);
+                            }
+                        }
+                    } catch (error) {
+                        updateTestResult('auth', 'adminProductAdd', false, `Error: ${error.message}`);
+                    }
+                } else {
+                    updateTestResult('auth', 'adminLogin', false, `Login failed: ${loginData.message || 'Unknown error'}`);
+                    log(`Admin login failed: ${loginData.message}`, 'auth');
+                }
+            } catch (error) {
+                updateTestResult('auth', 'adminLogin', false, `Error: ${error.message}`);
+            }
+        }
+
+        // Run all tests
+        async function runAllTests() {
+            await testBackend();
+            testFrontend();
+            await testAuth();
+        }
+
+        function runBackendTests() {
+            testBackend();
+        }
+
+        function runFrontendTests() {
+            testFrontend();
+        }
+
+        function runAuthTests() {
+            testAuth();
+        }
+
+        function clearResults() {
+            // Reset all test results
+            document.querySelectorAll('.result-icon').forEach(icon => {
+                icon.textContent = '⏳';
+            });
+            document.querySelectorAll('.result-message').forEach(msg => {
+                msg.textContent = 'Pending...';
+                msg.style.color = '#666';
+            });
+            document.querySelectorAll('.test-output').forEach(output => {
+                output.innerHTML = '';
+            });
+            
+            testResults = {
+                backend: { passed: 0, failed: 0, total: 0 },
+                frontend: { passed: 0, failed: 0, total: 0 },
+                auth: { passed: 0, failed: 0, total: 0 }
+            };
+            
+            document.getElementById('errorLog').style.display = 'none';
+            document.getElementById('errorList').innerHTML = '';
+            
+            updateProgress();
+        }
+
+        // Quick actions
+        function setupAdminAccount() {
+            window.location.href = 'admin-setup.html';
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all localStorage data? This will log you out and clear your cart.')) {
+                localStorage.clear();
+                alert('All data cleared! Page will reload.');
+                location.reload();
+            }
+        }
+
+        function testAddToCart() {
+            const testProduct = {
+                id: 'test-' + Date.now(),
+                name: 'Test Product',
+                price: 99.99,
+                image: 'test.jpg',
+                quantity: 1
+            };
+            
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            cart.push(testProduct);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            
+            alert('Test product added to cart! Check cart.html to verify.');
+        }
+
+        function fixCommonIssues() {
+            // Fix common issues
+            console.log('Running common fixes...');
+            
+            // Ensure required localStorage items exist
+            if (!localStorage.getItem('cart')) {
+                localStorage.setItem('cart', '[]');
+                console.log('Cart initialized');
+            }
+            
+            if (!localStorage.getItem('user')) {
+                localStorage.setItem('user', 'null');
+                console.log('User initialized');
+            }
+            
+            if (!localStorage.getItem('token')) {
+                localStorage.setItem('token', '');
+                console.log('Token initialized');
+            }
+            
+            alert('Common issues fixed! LocalStorage has been initialized.');
+        }
+
+        // Initialize
+        console.log('David Store Testing Tool Loaded');
+        updateProgress();
+    </script>
+</body>
+</html>

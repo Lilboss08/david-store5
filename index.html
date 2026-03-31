@@ -3,176 +3,524 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="David Store - Premium online shopping destination for electronics, fashion, and lifestyle products. Quality products at competitive prices with fast delivery.">
+    <meta name="keywords" content="online shopping, electronics, fashion, jewelry, premium products, Nigeria">
     <title>David Store - Premium Products at Great Prices</title>
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body>
-    <header>
-        <a href="#home" style="text-decoration: none;"><h2>🛍️ David Store</h2></a>
-        <div id="auth-links" class="auth-links"></div>
-        <div id="cart-icon">
-            <a href="cart.html">🛒 Cart ( <span id="cart-count">0</span> )</a>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-section">
+                <a href="#home" class="logo-link">
+                    <i class="fas fa-store"></i>
+                    <span class="logo-text">David Store</span>
+                </a>
+            </div>
+
+            <!-- Desktop Navigation -->
+            <nav class="desktop-nav">
+                <ul class="nav-list">
+                    <li><a href="#home" class="nav-link active">Home</a></li>
+                    <li class="dropdown">
+                        <a href="#categories" class="nav-link">Categories <i class="fas fa-chevron-down"></i></a>
+                        <div class="dropdown-menu">
+                            <a href="#" onclick="filterByCategory('All')">All Products</a>
+                            <a href="#" onclick="filterByCategory('Electronics')">Electronics</a>
+                            <a href="#" onclick="filterByCategory('Men\'s Clothing')">Men's Fashion</a>
+                            <a href="#" onclick="filterByCategory('Women\'s Clothing')">Women's Fashion</a>
+                            <a href="#" onclick="filterByCategory('Jewelry')">Jewelry & Accessories</a>
+                        </div>
+                    </li>
+                    <li><a href="#about" class="nav-link">About</a></li>
+                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                    <li><a href="#blog" class="nav-link">Blog</a></li>
+                </ul>
+            </nav>
+
+            <!-- User Actions -->
+            <div class="user-actions">
+                <div id="auth-links" class="auth-section"></div>
+                <a href="#" class="action-btn wishlist-btn" title="Wishlist">
+                    <i class="fas fa-heart"></i>
+                    <span class="wishlist-count">0</span>
+                </a>
+                <a href="cart.html" class="action-btn cart-btn" title="Shopping Cart">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cart-count" class="cart-count">0</span>
+                </a>
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
         </div>
+
+        <!-- Mobile Navigation -->
+        <nav class="mobile-nav" id="mobileNav">
+            <ul class="mobile-nav-list">
+                <li><a href="#home" class="mobile-nav-link">Home</a></li>
+                <li class="mobile-dropdown">
+                    <a href="#categories" class="mobile-nav-link">Categories <i class="fas fa-chevron-down"></i></a>
+                    <ul class="mobile-dropdown-menu">
+                        <li><a href="#" onclick="displayProducts()">All Products</a></li>
+                        <li><a href="#" onclick="filterByCategory('Electronics')">Electronics</a></li>
+                        <li><a href="#" onclick="filterByCategory('Men\'s Clothing')">Men's Fashion</a></li>
+                        <li><a href="#" onclick="filterByCategory('Women\'s Clothing')">Women's Fashion</a></li>
+                        <li><a href="#" onclick="filterByCategory('Jewelry')">Jewelry & Accessories</a></li>
+                    </ul>
+                </li>
+                <li><a href="#about" class="mobile-nav-link">About</a></li>
+                <li><a href="#contact" class="mobile-nav-link">Contact</a></li>
+                <li><a href="#blog" class="mobile-nav-link">Blog</a></li>
+            </ul>
+        </nav>
     </header>
 
-    <nav class="navbar">
-        <ul class="nav-menu">
-            <li><a href="#home" class="nav-link">Home</a></li>
-            <li class="dropdown">
-                <a href="#categories" class="nav-link">Categories ▼</a>
-                <div class="dropdown-content">
-                    <a href="#" onclick="displayProducts()">All Products</a>
-                    <a href="#" onclick="filterByCategory('Electronics')">Electronics</a>
-                    <a href="#" onclick="filterByCategory('Men\'s Clothing')">Men's Clothing</a>
-                    <a href="#" onclick="filterByCategory('Jewelry')">Jewelry</a>
-                    <a href="#" onclick="filterByCategory('Women\'s Clothing')">Women's Clothing</a>
-                </div>
-            </li>
-            <li><a href="#contact" class="nav-link">Contact</a></li>
-        </ul>
-    </nav>
-
-    <div class="search-bar">
-        <input type="search" id="search" placeholder="Search for products...">
-        <button onclick="searchProduct()">Search</button>
+    <!-- Search Bar Below Header -->
+    <div class="below-header-search">
+        <div class="search-container">
+            <input type="search" id="search" placeholder="Search products..." autocomplete="off">
+            <button onclick="searchProduct()" class="search-btn">
+                <i class="fas fa-search"></i>
+            </button>
+            <div id="search-suggestions" class="search-suggestions"></div>
+        </div>
     </div>
 
     <main>
         <!-- Hero Section -->
-        <section class="hero" id="home">
-            <!-- Floating decorative elements -->
-            <div class="hero-decoration">
-                <div class="floating-shape shape-1"></div>
-                <div class="floating-shape shape-2"></div>
-                <div class="floating-shape shape-3"></div>
-                <div class="floating-icon icon-1">📱</div>
-                <div class="floating-icon icon-2">💎</div>
-                <div class="floating-icon icon-3">👕</div>
-            </div>
-
-            <div class="hero-slider">
-                <div class="hero-slide active" data-slide="1">
-                    <div class="hero-content" data-aos="fade-right" data-aos-duration="1000">
-                        <div class="hero-badge">✨ Premium Quality</div>
-                        <h1>Welcome to <span class="highlight">David Store</span></h1>
-                        <p class="hero-description">Discover an extraordinary shopping experience with our carefully curated collection of premium products. From cutting-edge technology to timeless fashion, find everything you need at unbeatable prices with exceptional quality guaranteed.</p>
-                        <div class="hero-stats">
-                            <div class="stat">
-                                <span class="stat-number">10K+</span>
-                                <span class="stat-label">Happy Customers</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-number">500+</span>
-                                <span class="stat-label">Quality Products</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-number">24/7</span>
-                                <span class="stat-label">Customer Support</span>
-                            </div>
+        <section class="hero-section" id="home">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <div class="hero-badge">
+                        <i class="fas fa-star"></i>
+                        Premium Quality Guaranteed
+                    </div>
+                    <h1 class="hero-title">
+                        Welcome to <span class="highlight">David Store</span>
+                    </h1>
+                    <p class="hero-description">
+                        Discover an extraordinary shopping experience with our carefully curated collection of premium products.
+                        From cutting-edge technology to timeless fashion, find everything you need at unbeatable prices.
+                    </p>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">10K+</div>
+                            <div class="stat-label">Happy Customers</div>
                         </div>
-                        <div class="hero-actions">
-                            <button class="btn-primary" onclick="document.getElementById('product1').scrollIntoView({behavior: 'smooth'})">
-                                <span>🛍️ Shop Now</span>
-                            </button>
-                            <button class="btn-secondary" onclick="document.getElementById('contact').scrollIntoView({behavior: 'smooth'})">
-                                <span>📞 Contact Us</span>
-                            </button>
+                        <div class="stat-item">
+                            <div class="stat-number">500+</div>
+                            <div class="stat-label">Quality Products</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">24/7</div>
+                            <div class="stat-label">Customer Support</div>
                         </div>
                     </div>
-                </div>
-
-                <div class="hero-slide" data-slide="2">
-                    <div class="hero-content" data-aos="fade-left" data-aos-duration="1000">
-                        <div class="hero-badge">🚀 Future Tech</div>
-                        <h1>Latest <span class="highlight">Technology</span></h1>
-                        <p class="hero-description">Stay ahead of the curve with our cutting-edge electronics collection. From flagship smartphones and powerful laptops to innovative gadgets and accessories, experience the future of technology today with expert guidance and competitive pricing.</p>
-                        <div class="hero-features">
-                            <div class="feature">
-                                <span class="feature-icon">⚡</span>
-                                <span>Latest Models</span>
-                            </div>
-                            <div class="feature">
-                                <span class="feature-icon">🔧</span>
-                                <span>Expert Support</span>
-                            </div>
-                            <div class="feature">
-                                <span class="feature-icon">💰</span>
-                                <span>Best Prices</span>
-                            </div>
-                        </div>
-                        <div class="hero-actions">
-                            <button class="btn-primary" onclick="filterByCategory('Electronics')">
-                                <span>🔍 Explore Electronics</span>
-                            </button>
-                            <button class="btn-secondary" onclick="document.getElementById('search').focus()">
-                                <span>🔎 Search Products</span>
-                            </button>
-                        </div>
+                    <div class="hero-actions">
+                        <button class="btn-primary" onclick="document.getElementById('product1').scrollIntoView({behavior: 'smooth'})">
+                            <i class="fas fa-shopping-bag"></i>
+                            Shop Now
+                        </button>
+                        <button class="btn-secondary" onclick="document.getElementById('contact').scrollIntoView({behavior: 'smooth'})">
+                            <i class="fas fa-phone"></i>
+                            Contact Us
+                        </button>
                     </div>
                 </div>
-
-                <div class="hero-slide" data-slide="3">
-                    <div class="hero-content" data-aos="zoom-in" data-aos-duration="1000">
-                        <div class="hero-badge">👗 Fashion Forward</div>
-                        <h1>Style & <span class="highlight">Fashion</span></h1>
-                        <p class="hero-description">Elevate your personal style with our premium fashion collection. Discover timeless pieces crafted from high-quality materials, designed for the modern individual who values both comfort and sophistication in every outfit.</p>
-                        <div class="hero-features">
-                            <div class="feature">
-                                <span class="feature-icon">✨</span>
-                                <span>Premium Quality</span>
-                            </div>
-                            <div class="feature">
-                                <span class="feature-icon">🎨</span>
-                                <span>Trendy Designs</span>
-                            </div>
-                            <div class="feature">
-                                <span class="feature-icon">👑</span>
-                                <span>Luxury Brands</span>
-                            </div>
+                <div class="hero-visual">
+                    <div class="hero-image">
+                        <img src="https://via.placeholder.com/600x400/2563eb/ffffff?text=Premium+Products" alt="Premium Products">
+                    </div>
+                    <div class="floating-elements">
+                        <div class="floating-card card-1">
+                            <i class="fas fa-shipping-fast"></i>
+                            <span>Free Shipping</span>
                         </div>
-                        <div class="hero-actions">
-                            <button class="btn-primary" onclick="filterByCategory('Men\'s Clothing')">
-                                <span>🛒 Shop Fashion</span>
-                            </button>
-                            <button class="btn-secondary" onclick="filterByCategory('Women\'s Clothing')">
-                                <span>👗 Women's Collection</span>
-                            </button>
+                        <div class="floating-card card-2">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Secure Payment</span>
+                        </div>
+                        <div class="floating-card card-3">
+                            <i class="fas fa-undo"></i>
+                            <span>Easy Returns</span>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <div class="hero-navigation">
-                <button class="hero-prev" onclick="changeHeroSlide(-1)">
-                    <span>❮</span>
-                </button>
-                <button class="hero-next" onclick="changeHeroSlide(1)">
-                    <span>❯</span>
-                </button>
-            </div>
-
-            <div class="hero-dots">
-                <span class="hero-dot active" onclick="currentHeroSlide(1)"></span>
-                <span class="hero-dot" onclick="currentHeroSlide(2)"></span>
-                <span class="hero-dot" onclick="currentHeroSlide(3)"></span>
-            </div>
-        </section>
-
-        <!-- Call to Action Section -->
-        <section class="cta-section">
-            <div class="cta-container">
-                <h2>Join Our Community</h2>
-                <p>Create an account to enjoy exclusive deals, faster checkout, and personalized recommendations.</p>
-                <div class="cta-buttons">
-                    <a href="register.html" class="btn-primary">Sign Up Now</a>
-                    <a href="login.html" class="btn-secondary">Already a Member? Login</a>
                 </div>
             </div>
         </section>
 
-        <section class="product-container" id="product1">
-            <!-- Products will be loaded here dynamically -->
+        <!-- Trust Badges -->
+        <section class="trust-section">
+            <div class="trust-container">
+                <div class="trust-item">
+                    <i class="fas fa-lock"></i>
+                    <span>SSL Secured</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Fast Delivery</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fas fa-award"></i>
+                    <span>Quality Assured</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fas fa-headset"></i>
+                    <span>24/7 Support</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Money Back Guarantee</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Section -->
+        <section class="categories-section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2>Shop by Category</h2>
+                    <p>Browse our carefully organized collections</p>
+                </div>
+                <div class="categories-grid">
+                    <div class="category-card" onclick="filterByCategory('Electronics')" data-aos="fade-up">
+                        <div class="category-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3>Electronics</h3>
+                        <p>Phones, Laptops & Gadgets</p>
+                        <div class="category-count">120+ Products</div>
+                    </div>
+                    <div class="category-card" onclick="filterByCategory('Men\'s Clothing')" data-aos="fade-up" data-aos-delay="100">
+                        <div class="category-icon">
+                            <i class="fas fa-tshirt"></i>
+                        </div>
+                        <h3>Men's Fashion</h3>
+                        <p>Shirts, Pants & Accessories</p>
+                        <div class="category-count">85+ Products</div>
+                    </div>
+                    <div class="category-card" onclick="filterByCategory('Women\'s Clothing')" data-aos="fade-up" data-aos-delay="200">
+                        <div class="category-icon">
+                            <i class="fas fa-female"></i>
+                        </div>
+                        <h3>Women's Fashion</h3>
+                        <p>Dresses, Tops & More</p>
+                        <div class="category-count">95+ Products</div>
+                    </div>
+                    <div class="category-card" onclick="filterByCategory('Jewelry')" data-aos="fade-up" data-aos-delay="300">
+                        <div class="category-icon">
+                            <i class="fas fa-gem"></i>
+                        </div>
+                        <h3>Jewelry & Accessories</h3>
+                        <p>Rings, Necklaces & Bracelets</p>
+                        <div class="category-count">60+ Products</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Products Section -->
+        <section class="featured-section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2>Featured Products</h2>
+                    <p>Handpicked products just for you</p>
+                </div>
+                <div class="featured-grid" id="featuredProducts">
+                    <!-- Featured products will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section class="products-section" id="product1">
+            <div class="section-container">
+                <div class="products-header">
+                    <h2>All Products</h2>
+                    <div class="products-controls">
+                        <div class="sort-filter">
+                            <select id="sortSelect" onchange="sortProducts(this.value)">
+                                <option value="default">Sort by: Default</option>
+                                <option value="price-low">Price: Low to High</option>
+                                <option value="price-high">Price: High to Low</option>
+                                <option value="rating">Highest Rated</option>
+                                <option value="newest">Newest First</option>
+                            </select>
+                        </div>
+                        <div class="view-toggle">
+                            <button class="view-btn active" onclick="setViewMode('grid')">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button class="view-btn" onclick="setViewMode('list')">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="products-container" id="productsContainer">
+                    <!-- Products will be loaded here dynamically -->
+                </div>
+                <div class="load-more-container">
+                    <button id="loadMoreBtn" class="btn-secondary" onclick="loadMoreProducts()">
+                        <i class="fas fa-plus"></i>
+                        Load More Products
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section class="testimonials-section">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2>What Our Customers Say</h2>
+                    <p>Real reviews from real customers</p>
+                </div>
+                <div class="testimonials-grid">
+                    <div class="testimonial-card" data-aos="fade-up">
+                        <div class="testimonial-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            "Amazing shopping experience! The product quality exceeded my expectations and delivery was super fast."
+                        </p>
+                        <div class="testimonial-author">
+                            <img src="https://via.placeholder.com/50x50/2563eb/ffffff?text=SA" alt="Sarah A.">
+                            <div>
+                                <div class="author-name">Sarah Adebayo</div>
+                                <div class="author-title">Verified Customer</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="testimonial-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            "David Store has become my go-to for all electronics. Great prices and excellent customer service!"
+                        </p>
+                        <div class="testimonial-author">
+                            <img src="https://via.placeholder.com/50x50/10b981/ffffff?text=MO" alt="Michael O.">
+                            <div>
+                                <div class="author-name">Michael Okon</div>
+                                <div class="author-title">Tech Enthusiast</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="testimonial-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            "Love the fashion collection! Always find trendy pieces at affordable prices. Highly recommended!"
+                        </p>
+                        <div class="testimonial-author">
+                            <img src="https://via.placeholder.com/50x50/f59e0b/ffffff?text=AI" alt="Amara I.">
+                            <div>
+                                <div class="author-name">Amara Ibrahim</div>
+                                <div class="author-title">Fashion Blogger</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Newsletter Section -->
+        <section class="newsletter-section">
+            <div class="newsletter-container">
+                <div class="newsletter-content">
+                    <div class="newsletter-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h2>Stay Updated</h2>
+                    <p>Subscribe to our newsletter and get exclusive deals, new product alerts, and shopping tips delivered to your inbox.</p>
+                    <form class="newsletter-form" id="newsletterForm">
+                        <div class="form-group">
+                            <input type="email" id="newsletterEmail" placeholder="Enter your email address" required>
+                            <button type="submit" class="btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                                Subscribe
+                            </button>
+                        </div>
+                        <div class="form-consent">
+                            <input type="checkbox" id="newsletterConsent" required>
+                            <label for="newsletterConsent">I agree to receive marketing emails and can unsubscribe at any time.</label>
+                        </div>
+                    </form>
+                    <div id="newsletterMessage" class="form-message"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="faq-section" id="faq">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2>Frequently Asked Questions</h2>
+                    <p>Find answers to common questions</p>
+                </div>
+                <div class="faq-container">
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <h3>How long does delivery take?</h3>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Delivery typically takes 2-5 business days within Lagos and major cities. Rural areas may take 5-7 business days. Express delivery is available for urgent orders.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <h3>What is your return policy?</h3>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>We offer a 7-day return policy for most items. Products must be in original condition with tags attached. Return shipping costs may apply for certain items.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <h3>Do you offer warranty on products?</h3>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Yes, all our products come with manufacturer warranty. Electronics typically have 1-2 year warranty, while fashion items have 6-month warranty against manufacturing defects.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <h3>How secure is my payment information?</h3>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Your payment information is fully secured with SSL encryption. We use industry-standard payment processors and never store your credit card details on our servers.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFAQ(this)">
+                            <h3>Can I track my order?</h3>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Yes! Once your order ships, you'll receive a tracking number via email and SMS. You can track your order status in real-time through our website.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="about-section" id="about">
+            <div class="section-container">
+                <div class="about-content">
+                    <div class="about-text">
+                        <h2>About David Store</h2>
+                        <p>
+                            Founded in 2020, David Store has been Nigeria's premier online shopping destination,
+                            offering premium products at competitive prices. We pride ourselves on providing
+                            exceptional customer service, fast delivery, and a seamless shopping experience.
+                        </p>
+                        <p>
+                            Our carefully curated collection includes the latest electronics, trendy fashion,
+                            and exquisite jewelry. Every product is selected for its quality, value, and
+                            ability to enhance your lifestyle.
+                        </p>
+                        <div class="about-stats">
+                            <div class="about-stat">
+                                <div class="stat-number">2020</div>
+                                <div class="stat-label">Founded</div>
+                            </div>
+                            <div class="about-stat">
+                                <div class="stat-number">10K+</div>
+                                <div class="stat-label">Customers</div>
+                            </div>
+                            <div class="about-stat">
+                                <div class="stat-number">500+</div>
+                                <div class="stat-label">Products</div>
+                            </div>
+                            <div class="about-stat">
+                                <div class="stat-number">4.8</div>
+                                <div class="stat-label">Rating</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="about-image">
+                        <img src="https://via.placeholder.com/500x400/2563eb/ffffff?text=About+David+Store" alt="About David Store">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Blog Section -->
+        <section class="blog-section" id="blog">
+            <div class="section-container">
+                <div class="section-header">
+                    <h2>Latest from Our Blog</h2>
+                    <p>Shopping tips, product guides, and lifestyle content</p>
+                </div>
+                <div class="blog-grid">
+                    <article class="blog-card" data-aos="fade-up">
+                        <div class="blog-image">
+                            <img src="https://via.placeholder.com/350x200/2563eb/ffffff?text=Shopping+Tips" alt="Shopping Tips">
+                            <div class="blog-category">Tips</div>
+                        </div>
+                        <div class="blog-content">
+                            <h3>10 Shopping Tips for the Smart Buyer</h3>
+                            <p>Learn how to make informed purchasing decisions and get the best value for your money.</p>
+                            <div class="blog-meta">
+                                <span><i class="fas fa-calendar"></i> March 15, 2024</span>
+                                <span><i class="fas fa-clock"></i> 5 min read</span>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="blog-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="blog-image">
+                            <img src="https://via.placeholder.com/350x200/10b981/ffffff?text=Tech+Guide" alt="Tech Guide">
+                            <div class="blog-category">Tech</div>
+                        </div>
+                        <div class="blog-content">
+                            <h3>Ultimate Guide to Choosing the Right Smartphone</h3>
+                            <p>Everything you need to know before buying your next smartphone in 2024.</p>
+                            <div class="blog-meta">
+                                <span><i class="fas fa-calendar"></i> March 10, 2024</span>
+                                <span><i class="fas fa-clock"></i> 8 min read</span>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="blog-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="blog-image">
+                            <img src="https://via.placeholder.com/350x200/f59e0b/ffffff?text=Fashion+Trends" alt="Fashion Trends">
+                            <div class="blog-category">Fashion</div>
+                        </div>
+                        <div class="blog-content">
+                            <h3>Spring 2024 Fashion Trends You Need to Know</h3>
+                            <p>Discover the latest fashion trends and how to incorporate them into your wardrobe.</p>
+                            <div class="blog-meta">
+                                <span><i class="fas fa-calendar"></i> March 5, 2024</span>
+                                <span><i class="fas fa-clock"></i> 6 min read</span>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
         </section>
 
         <!-- Contact Section -->
@@ -224,83 +572,148 @@
             </div>
         </section>
 
-        <footer class="footer">
-            <div class="footer-content">
-                <!-- Company Info Section -->
-                <div class="footer-section">
-                    <h3>David Store</h3>
-                    <p>Your trusted online shopping destination for premium products at unbeatable prices.</p>
-                    <div class="social-links">
-                        <a href="#" title="Facebook">f</a>
-                        <a href="#" title="Twitter">𝕏</a>
-                        <a href="#" title="Instagram">📷</a>
-                        <a href="#" title="LinkedIn">in</a>
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="footer-container">
+                <div class="footer-content">
+                    <!-- Company Info -->
+                    <div class="footer-section">
+                        <div class="footer-logo">
+                            <i class="fas fa-store"></i>
+                            <span>David Store</span>
+                        </div>
+                        <p>Your trusted online shopping destination for premium products at unbeatable prices. Quality guaranteed with fast, secure delivery across Nigeria.</p>
+                        <div class="social-links">
+                            <a href="#" class="social-link" title="Facebook">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="social-link" title="Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="social-link" title="Instagram">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="#" class="social-link" title="LinkedIn">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a href="#" class="social-link" title="YouTube">
+                                <i class="fab fa-youtube"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Links -->
+                    <div class="footer-section">
+                        <h3>Quick Links</h3>
+                        <ul>
+                            <li><a href="#home">Home</a></li>
+                            <li><a href="#about">About Us</a></li>
+                            <li><a href="#product1">Shop</a></li>
+                            <li><a href="#blog">Blog</a></li>
+                            <li><a href="#contact">Contact</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Customer Service -->
+                    <div class="footer-section">
+                        <h3>Customer Service</h3>
+                        <ul>
+                            <li><a href="#">Track Order</a></li>
+                            <li><a href="#">Returns & Exchanges</a></li>
+                            <li><a href="#">Shipping Info</a></li>
+                            <li><a href="#faq">FAQ</a></li>
+                            <li><a href="#">Size Guide</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Categories -->
+                    <div class="footer-section">
+                        <h3>Shop by Category</h3>
+                        <ul>
+                            <li><a href="#" onclick="filterByCategory('Electronics')">Electronics</a></li>
+                            <li><a href="#" onclick="filterByCategory('Men\'s Clothing')">Men's Fashion</a></li>
+                            <li><a href="#" onclick="filterByCategory('Women\'s Clothing')">Women's Fashion</a></li>
+                            <li><a href="#" onclick="filterByCategory('Jewelry')">Jewelry & Accessories</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact Info -->
+                    <div class="footer-section">
+                        <h3>Contact Info</h3>
+                        <ul class="contact-list">
+                            <li>
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>123 Shopping Street, Commerce City, CC 12345</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-phone"></i>
+                                <span>+234 1-800-DAVID-01</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-envelope"></i>
+                                <span>support@davidstore.com</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-clock"></i>
+                                <span>Mon-Fri: 9AM - 6PM WAT</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
 
-                <!-- Quick Links -->
-                <div class="footer-section">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="#product1">Shop</a></li>
-                        <li><a href="#contact">Contact Us</a></li>
-                        <li><a href="#">About Us</a></li>
-                    </ul>
+                <!-- Payment Methods & Certifications -->
+                <div class="footer-bottom">
+                    <div class="payment-methods">
+                        <span>We Accept:</span>
+                        <div class="payment-icons">
+                            <i class="fab fa-cc-visa" title="Visa"></i>
+                            <i class="fab fa-cc-mastercard" title="Mastercard"></i>
+                            <i class="fab fa-cc-paypal" title="PayPal"></i>
+                            <i class="fab fa-apple-pay" title="Apple Pay"></i>
+                            <i class="fab fa-google-pay" title="Google Pay"></i>
+                        </div>
+                    </div>
+                    <div class="certifications">
+                        <span>
+                            <i class="fas fa-lock"></i>
+                            SSL Secured
+                        </span>
+                        <span>
+                            <i class="fas fa-shield-alt"></i>
+                            100% Authentic
+                        </span>
+                        <span>
+                            <i class="fas fa-award"></i>
+                            Quality Assured
+                        </span>
+                    </div>
                 </div>
 
-                <!-- Customer Service -->
-                <div class="footer-section">
-                    <h4>Customer Service</h4>
-                    <ul>
-                        <li><a href="#">Track Order</a></li>
-                        <li><a href="#">Returns & Exchanges</a></li>
-                        <li><a href="#">Shipping Info</a></li>
-                        <li><a href="#">FAQ</a></li>
-                    </ul>
+                <!-- Newsletter Signup -->
+                <div class="footer-newsletter">
+                    <div class="newsletter-content">
+                        <h3>Stay Connected</h3>
+                        <p>Get exclusive deals and updates delivered to your inbox</p>
+                        <form class="footer-newsletter-form" id="footerNewsletterForm">
+                            <input type="email" placeholder="Enter your email" required>
+                            <button type="submit">
+                                <i class="fas fa-envelope"></i>
+                                Subscribe
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
-                <!-- Policies -->
-                <div class="footer-section">
-                    <h4>Policies</h4>
-                    <ul>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms & Conditions</a></li>
-                        <li><a href="#">Refund Policy</a></li>
-                        <li><a href="#">Cookies Policy</a></li>
-                    </ul>
+                <!-- Copyright -->
+                <div class="copyright">
+                    <p>&copy; 2024 David Store. All rights reserved.</p>
+                    <div class="legal-links">
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms & Conditions</a>
+                        <a href="#">Cookie Policy</a>
+                        <a href="#">Accessibility</a>
+                    </div>
                 </div>
-
-                <!-- Contact Info -->
-                <div class="footer-section">
-                    <h4>Contact Info</h4>
-                    <p>📍 123 Shopping Street, Commerce City, CC 12345</p>
-                    <p>📧 support@davidstore.com</p>
-                    <p>📞 1-800-DAVID-01</p>
-                    <p>🕐 Mon-Fri: 9AM - 6PM EST</p>
-                </div>
-            </div>
-
-            <!-- Payment Methods & Certifications -->
-            <div class="footer-certifications">
-                <div class="payment-methods">
-                    <span>✓ Secure Payments:</span>
-                    <span>Visa</span>
-                    <span>Mastercard</span>
-                    <span>PayPal</span>
-                    <span>Apple Pay</span>
-                </div>
-                <div class="certifications">
-                    <span>🔒 SSL Certified</span>
-                    <span>✓ 100% Authentic</span>
-                    <span>✓ Money Back Guarantee</span>
-                </div>
-            </div>
-
-            <!-- Copyright & Trademarks -->
-            <div class="footer-bottom">
-                <p>&copy; 2026 David Store. All rights reserved.</p>
-                <p>All product names, logos, brands, and trademarks are the property of their respective owners.</p>
             </div>
         </footer>
     </main>
@@ -317,7 +730,11 @@
                     <h2 id="modalProductTitle"></h2>
                     <div class="modal-rating" id="modalProductRating"></div>
                     <p class="modal-category" id="modalProductCategory"></p>
-                    <p id="modalProductDescription" class="modal-description"></p>
+                    <p id="modalProductStock" class="modal-stock"></p>
+                    <div id="modalDescriptionContainer" class="modal-description-container collapsed">
+                        <p id="modalProductDescription" class="modal-description"></p>
+                    </div>
+                    <button id="descriptionToggleBtn" class="description-toggle-btn">Show more</button>
                     <div class="modal-price-section">
                         <div class="modal-price">
                             <span class="price-label">Price:</span>

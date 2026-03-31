@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Debug - David Store</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .debug-section {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button.danger {
+            background: #dc3545;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-indicator.success { background: #28a745; }
+        .status-indicator.error { background: #dc3545; }
+        .status-indicator.warning { background: #ffc107; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Authentication Debug Tool</h1>
+    
+    <div class="debug-panel">
+        <h2>Step 1: Check Current Auth State</h2>
+        <div id="authState"></div>
+        <button onclick="checkAuthState()">Refresh Auth State</button>
+    </div>
+
+    <div class="debug-panel">
+        <h2>Step 2: Test Login</h2>
+        <input type="email" id="testEmail" placeholder="Email" value="admin@davidstore.com" style="padding: 10px; width: 300px; margin-right: 10px;">
+        <input type="password" id="testPassword" placeholder="Password" value="admin123" style="padding: 10px; width: 200px; margin-right: 10px;">
+        <button onclick="testLogin()">Test Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <div class="debug-panel">
+        <h2>Step 3: Test API Request</h2>
+        <button onclick="testProductAdd()">Test Add Product (Admin API)</button>
+        <div id="apiResult"></div>
+    </div>
+
+    <div class="debug-panel">
+        <h2>Actions</h2>
+        <button class="danger" onclick="clearAllData()">Clear All LocalStorage</button>
+        <button onclick="testLogout()">Test Logout</button>
+    </div>
+
+    <div class="debug-panel">
+        <h2>Debug Console</h2>
+        <div id="debugLog" style="max-height: 300px; overflow-y: auto;"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('debugLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `debug-section ${type}`;
+            logEntry.innerHTML = `<span style="color: #666; font-size: 12px;">[${timestamp}]</span> ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        function checkAuthState() {
+            const stateDiv = document.getElementById('authState');
+            
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+            const token = localStorage.getItem('token');
+            
+            let html = '<div class="debug-section">';
+            
+            // Check user data
+            html += `<h3>User Data:</h3>`;
+            if (user) {
+                html += `<span class="status-indicator success"></span>User found in localStorage<br>`;
+                html += `<strong>Email:</strong> ${user.email || 'N/A'}<br>`;
+                html += `<strong>Role:</strong> ${user.role || 'N/A'}<br>`;
+                html += `<strong>Full Name:</strong> ${user.fullName || 'N/A'}<br>`;
+                html += `<strong>Is Admin:</strong> ${user.role === 'admin' ? '<span style="color: green;">✅ Yes</span>' : '<span style="color: red;">❌ No</span>'}<br>`;
+                html += `<pre>${JSON.stringify(user, null, 2)}</pre>`;
+            } else {
+                html += `<span class="status-indicator error"></span>No user found in localStorage<br>`;
+            }
+            
+            // Check token
+            html += `<h3>Token:</h3>`;
+            if (token) {
+                html += `<span class="status-indicator success"></span>Token found<br>`;
+                html += `<strong>Token Length:</strong> ${token.length} characters<br>`;
+                html += `<strong>Token Preview:</strong> ${token.substring(0, 30)}...<br>`;
+            } else {
+                html += `<span class="status-indicator error"></span>No token found<br>`;
+            }
+            
+            html += '</div>';
+            stateDiv.innerHTML = html;
+            
+            log(`Auth state checked - User: ${user ? user.email : 'none'}, Token: ${token ? 'present' : 'missing'}, IsAdmin: ${user?.role === 'admin'}`, 
+                user?.role === 'admin' ? 'success' : 'warning');
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            resultDiv.innerHTML = '<div class="debug-section warning">Testing login...</div>';
+            log(`Attempting login for: ${email}`);
+            
+            try {
+                const res = await fetch('http://localhost:4000/api/v1/user/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    resultDiv.innerHTML = `<div class="debug-section error">
+                        <strong>❌ Login Failed</strong><br>
+                        <strong>Status:</strong> ${res.status}<br>
+                        <strong>Message:</strong> ${data.message || 'Unknown error'}<br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>`;
+                    log(`Login failed: ${data.message}`, 'error');
+                    return;
+                }
+
+                // Success
+                if (data.user) {
+                    log(`User data received: ${data.user.email} (${data.user.role})`, 'success');
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                }
+                if (data.token) {
+                    log(`Token received: ${data.token.substring(0, 20)}...`, 'success');
+                    localStorage.setItem('token', data.token);
+                } else {
+                    log('No token in response!', 'error');
+                }
+
+                resultDiv.innerHTML = `<div class="debug-section success">
+                    <strong>✅ Login Successful</strong><br>
+                    <strong>User:</strong> ${data.user?.email}<br>
+                    <strong>Role:</strong> ${data.user?.role}<br>
+                    <strong>Token:</strong> ${data.token ? 'Received ✅' : 'Missing ❌'}<br>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>`;
+                
+                checkAuthState();
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="debug-section error">
+                    <strong>❌ Network Error</strong><br>
+                    ${error.message}
+                </div>`;
+                log(`Login network error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testProductAdd() {
+            const resultDiv = document.getElementById('apiResult');
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user'));
+            
+            if (!token) {
+                resultDiv.innerHTML = `<div class="debug-section error">No token available. Please login first.</div>`;
+                log('No token for API test', 'error');
+                return;
+            }
+            
+            if (user?.role !== 'admin') {
+                resultDiv.innerHTML = `<div class="debug-section error">User is not an admin. Current role: ${user?.role || 'unknown'}</div>`;
+                log('Non-admin user attempting admin API call', 'error');
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="debug-section warning">Testing product add API...</div>';
+            log('Testing product add API with token...');
+            
+            try {
+                const res = await fetch('http://localhost:4000/api/v1/products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        title: 'Test Product',
+                        description: 'Test Description',
+                        price: 99.99,
+                        category: 'Electronics',
+                        stock: 10,
+                        image: 'test.jpg'
+                    })
+                });
+
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    resultDiv.innerHTML = `<div class="debug-section error">
+                        <strong>❌ API Request Failed</strong><br>
+                        <strong>Status:</strong> ${res.status}<br>
+                        <strong>Message:</strong> ${data.message || 'Unknown error'}<br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>`;
+                    log(`API request failed: ${data.message} (${res.status})`, 'error');
+                } else {
+                    resultDiv.innerHTML = `<div class="debug-section success">
+                        <strong>✅ API Request Successful</strong><br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>`;
+                    log('API request successful', 'success');
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="debug-section error">
+                    <strong>❌ Network Error</strong><br>
+                    ${error.message}
+                </div>`;
+                log(`API network error: ${error.message}`, 'error');
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all localStorage data? This will log you out.')) {
+                localStorage.clear();
+                log('All localStorage cleared', 'warning');
+                checkAuthState();
+                document.getElementById('loginResult').innerHTML = '';
+                document.getElementById('apiResult').innerHTML = '';
+            }
+        }
+
+        function testLogout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            log('User logged out', 'warning');
+            checkAuthState();
+        }
+
+        // Initialize
+        checkAuthState();
+        log('Debug tool initialized');
+    </script>
+</body>
+</html>

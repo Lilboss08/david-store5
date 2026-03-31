@@ -35,6 +35,29 @@ if (typeof AOS !== 'undefined') {
 let products = []; // Will be populated from backend and merged with local list
 let currentCategory = 'All'; // Track current category filter
 
+const productSpecificTemplateOverrides = {
+    // example override by product id or SKU
+    'MIJ-D3220A': `MIJ-D3220A Exclusive details...
+This is a product-specific override description with features, warranties, seller info, and match details.`,
+    1: `Special product #1 promo text - limited time discount, 2-year warranty, and fast shipping.`
+};
+
+const descriptionContainer = document.getElementById('modalDescriptionContainer');
+const descriptionToggleBtn = document.getElementById('descriptionToggleBtn');
+
+const setDescriptionCollapsed = (isCollapsed) => {
+    if (!descriptionContainer || !descriptionToggleBtn) return;
+    descriptionContainer.classList.toggle('collapsed', isCollapsed);
+    descriptionToggleBtn.textContent = isCollapsed ? 'Show more' : 'Show less';
+};
+
+if (descriptionToggleBtn) {
+    descriptionToggleBtn.addEventListener('click', () => {
+        const collapsed = descriptionContainer?.classList.contains('collapsed');
+        setDescriptionCollapsed(!collapsed);
+    });
+}
+
 // helper: merge two product arrays by id, backend overrides frontend
 function mergeProducts(localList, backendList) {
     const map = new Map();
@@ -130,6 +153,23 @@ function saveCart() {
     localStorage.setItem("cart", JSON.stringify(cart));
 }
 
+// Update product stock on server (optional, requires admin role for strict backend policy)
+async function updateProductStock(productId, newStock) {
+    try {
+        const token = localStorage.getItem('token');
+        await fetch(`http://localhost:4000/api/v1/products/${productId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ stock: newStock })
+        });
+    } catch (err) {
+        console.warn('Could not sync stock with server:', err);
+    }
+}
+
 // Load and display cart on page load
 function loadCart() {
     updateCart();
@@ -143,8 +183,11 @@ function renderAuthLinks() {
     if (isLoggedIn()) {
         const user = getStoredUser();
         const name = user?.fullName || user?.name || 'Customer';
+        const adminLink = user?.role === 'admin' ? `<a href="admin.html" class="auth-btn">Admin</a>` : '';
+
         authContainer.innerHTML = `
             <span class="user-greeting">Hi, ${name}</span>
+            ${adminLink}
             <button id="logoutBtn" class="auth-btn">Logout</button>
         `;
         const logoutBtn = document.getElementById('logoutBtn');
@@ -167,6 +210,57 @@ const increaseQtyBtn = document.getElementById('increaseQty');
 let currentViewingProduct = null;
 
 // Modal Control Functions
+// Modal Control Functions
+function getAddToCartDescriptionTemplate(product) {
+    const brand = product.brand || product.name?.split(' ')[0] || 'Mi+';
+
+    const specialTemplate = product.specificTemplate || product.productSpecificTemplate || productSpecificTemplateOverrides[product.id] || productSpecificTemplateOverrides[product.sku];
+    if (specialTemplate) {
+        return specialTemplate;
+    }
+
+    return `Mi+ 32'' Inches Smart Digital Satellite Frameless HD LED TV , Android 14 OS (1G+8G), HDMI x3, USB x2, Earphone Out x1 - Black + 12 MONTHS WARRANTY - Black (MIJ-D3220A)
+Brand: ${brand} | Similar products from ${brand}
+Flash Sales
+Time Left: 17h : 24m : 56s
+₦ 105,975
+₦ 128,673
+18%
+100 items left
++ shipping from ₦ 1,500 to LEKKI-AJAH (SANGOTEDO)
+4.1 out of 5
+(283 verified ratings)
+Select Other Options:
+
+Add to cart
+2offers starting from₦ 105,975
+
+See More Offers
+Promotions
+Call 07006000000 To Place Your Order
+Enjoy cheaper shipping fees when you select a PickUp Station at checkout.
+Report incorrect product information
+Delivery & Returns
+The BEST products, delivered faster. Now PAY on DELIVERY, Cash or Bank Transfer Anywhere, Zero Wahala! Details
+
+Choose your location
+
+Lagos
+
+LEKKI-AJAH (SANGOTEDO)
+Pickup Station
+Details
+Delivery Fees ₦ 1,500
+Ready for pickup in 26 March and 27 March if order is placed within the next 33mins
+Door Delivery
+Details
+Delivery Fees ₦ 2,500
+Ready for delivery in 26 March and 27 March if order is placed within the next 33mins
+Return Policy
+Free return within 7 days for ALL eligible itemsDetails
+`; 
+}
+
 function openProductModal(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
@@ -178,6 +272,14 @@ function openProductModal(productId) {
     const productCategory = product.category || 'Uncategorized';
     const productDescription = product.description || 'No description available';
     const productRating = product.rating || { rate: 0, count: 0 };
+    const productStock = Number(product.stock ?? 0);
+
+    const addToCartTemplate = getAddToCartDescriptionTemplate(product);
+    const mergedDescription = addToCartTemplate ? `${productDescription}\n\n${addToCartTemplate}` : productDescription;
+    const isSoldOut = productStock <= 0;
+
+    // Ensure modal text starts collapsed each time
+    setDescriptionCollapsed(true);
 
     // Populate modal
     document.getElementById('modalProductTitle').textContent = productName;
@@ -188,8 +290,28 @@ function openProductModal(productId) {
     
     document.getElementById('modalProductPrice').textContent = `$${productPrice.toFixed(2)}`;
     document.getElementById('modalProductCategory').textContent = productCategory;
-    document.getElementById('modalProductDescription').textContent = productDescription;
+    document.getElementById('modalProductStock').textContent = `Stock: ${productStock}`;
+    document.getElementById('modalProductDescription').textContent = mergedDescription;
     
+    // Handle stock state
+    if (isSoldOut) {
+        modalAddToCartBtn.disabled = true;
+        modalAddToCartBtn.textContent = 'Sold Out';
+        modalAddToCartBtn.style.backgroundColor = '#999';
+        quantityInput.value = 0;
+        quantityInput.disabled = true;
+        decreaseQtyBtn.disabled = true;
+        increaseQtyBtn.disabled = true;
+    } else {
+        modalAddToCartBtn.disabled = false;
+        modalAddToCartBtn.textContent = 'Add to Cart';
+        modalAddToCartBtn.style.backgroundColor = '';
+        quantityInput.value = 1;
+        quantityInput.disabled = false;
+        decreaseQtyBtn.disabled = false;
+        increaseQtyBtn.disabled = false;
+    }
+
     // Set rating
     const ratingStars = productRating.rate ? String.fromCharCode(0x2B50).repeat(Math.round(productRating.rate)) : 'No rating';
     document.getElementById('modalProductRating').innerHTML = 
@@ -274,53 +396,80 @@ if (modalAddToCartBtn) {
 }
 
 // Render products
+function renderProductCard(product) {
+    const productName = product.title || product.name;
+    const productImage = product.image || `./${product.img}`;
+    const productPrice = product.price;
+    const productCategory = product.category || 'Uncategorized';
+    const productDescription = product.description || '';
+    const productRating = product.rating || { rate: 0, count: 0 };
+    const productStock = Number(product.stock ?? 0);
+    const isSoldOut = productStock <= 0;
+
+    const ratingStars = productRating.rate ? String.fromCharCode(0x2B50).repeat(Math.round(productRating.rate)) : 'No rating';
+    const shortDescription = productDescription ? `${productDescription.slice(0, 80)}${productDescription.length > 80 ? '...' : ''}` : 'High-quality product for everyday use.';
+    const oldPrice = (productPrice * 1.15).toFixed(2);
+    const discountPercent = 15;
+    const stockPercent = Math.min(100, Math.floor((productStock / 50) * 100));
+
+    return `
+        <div class="product-badge-area">
+            ${productStock > 0 ? '<span class="product-badge in-stock">In Stock</span>' : '<span class="product-badge out-of-stock">Out of Stock</span>'}
+            ${productStock > 20 ? '<span class="product-badge fast-shipping">Fast Shipping</span>' : ''}
+            <span class="product-badge discount">${discountPercent}% Off</span>
+        </div>
+        <div class="product-image-wrapper">
+            <img src="${productImage}" alt="${productName}" onerror="this.src='https://via.placeholder.com/200?text=Product'">
+        </div>
+        <h3>${productName}</h3>
+        <p class="product-description">${shortDescription}</p>
+        <span class="product-category">${getCategoryIcon(productCategory)} ${productCategory}</span>
+        <div class="product-rating">
+            <span class="stars">${ratingStars}</span>
+            <span>(${productRating.count})</span>
+        </div>
+        <div class="product-price-wrapper">
+            <span class="product-old-price">$${oldPrice}</span>
+            <span class="product-price">$${productPrice.toFixed(2)}</span>
+        </div>
+        <div class="stock-bar-wrap">
+            <div class="stock-bar" style="width: ${stockPercent}%"></div>
+        </div>
+        <div class="product-stock">${isSoldOut ? 'Currently unavailable' : `Stock: ${productStock} units`}</div>
+        <div class="product-actions">
+            <button class="view-btn" onclick="event.stopPropagation()">🔍 View</button>
+            <button class="cart-btn" onclick="event.stopPropagation()" ${isSoldOut ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>🛒 Add</button>
+        </div>
+    `;
+}
+
 function displayProducts() {
     currentCategory = 'All';
     if (!productContainer) return; // Only run on index.html
     productContainer.innerHTML = "";
 
     products.forEach(product => {
-        // Handle both backend products (with 'title', 'image') and local products (with 'name', 'img')
-        const productName = product.title || product.name;
-        const productImage = product.image || `./${product.img}`;
-        const productPrice = product.price;
         const productId = product.id;
         const productCategory = product.category || 'Uncategorized';
-        const productDescription = product.description || '';
-        const productRating = product.rating || { rate: 0, count: 0 };
 
         const div = document.createElement("div");
         div.className = "product";
+        div.setAttribute('data-category', productCategory.toLowerCase().replace(/[^a-z0-9]/g, '-'));
 
         // Add category class for styling
         const categoryClass = productCategory.toLowerCase().replace(/[^a-z0-9]/g, '-');
         div.classList.add(`category-${categoryClass}`);
-        
-        const ratingStars = productRating.rate ? String.fromCharCode(0x2B50).repeat(Math.round(productRating.rate)) : 'No rating';
 
-        div.innerHTML = `
-            <img src="${productImage}" alt="${productName}" onerror="this.src='https://via.placeholder.com/200?text=Product'">
-            <h3>${productName}</h3>
-            <span class="product-category">${getCategoryIcon(productCategory)} ${productCategory}</span>
-            <div class="product-rating">
-                <span class="stars">${ratingStars}</span>
-                <span>(${productRating.count})</span>
-            </div>
-            <div class="product-price">$${productPrice.toFixed(2)}</div>
-            <div class="product-actions">
-                <button class="view-btn" onclick="event.stopPropagation()">\uD83D\uDD0D\uFE0F View</button>
-                <button class="cart-btn" onclick="event.stopPropagation()">\uD83D\uDED2 Add</button>
-            </div>
-        `;
+        div.innerHTML = renderProductCard(product);
 
         div.style.cursor = 'pointer';
         div.onclick = () => openProductModal(productId);
-        
+
         div.querySelector(".view-btn").onclick = (e) => {
             e.stopPropagation();
             openProductModal(productId);
         };
-        
+
         div.querySelector(".cart-btn").onclick = (e) => {
             e.stopPropagation();
             addToCartDirect(productId, 1);
@@ -334,6 +483,316 @@ function displayProducts() {
 if (productContainer) {
     displayProducts();
     updateActiveCategoryIndicator('All');
+}
+
+// Cart location selection initialization
+if (document.getElementById('stateSelect')) {
+    initLocationSelection();
+}
+
+let deliveryFee = 0;
+let selectedState = localStorage.getItem('selectedState') || '';
+let selectedLga = localStorage.getItem('selectedLga') || '';
+
+async function fetchStates() {
+    const fallbackStates = [
+        'Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta',
+        'Ebonyi','Edo','Ekiti','Enugu','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara',
+        'Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara','FCT'
+    ];
+
+    try {
+        const res = await fetch('http://localhost:4000/api/v1/location/states');
+        if (res.ok) {
+            const data = await res.json();
+            const states = Array.isArray(data.states) ? data.states : [];
+            if (states.length) return states;
+        }
+    } catch (err) {
+        console.warn('Local states fetch failed (fallback on rendered API):', err);
+    }
+
+    // Fallback to built-in list if local endpoint is unavailable
+    return fallbackStates.sort();
+}
+
+async function fetchLGAs(state) {
+    if (!state) return [];
+    const encoded = encodeURIComponent(state);
+
+    // First try local backend endpoint
+    try {
+        const res = await fetch(`http://localhost:4000/api/v1/location/lgas/${encoded}`);
+        if (res.ok) {
+            const data = await res.json();
+            const lgas = Array.isArray(data.lgas) ? data.lgas : [];
+            if (lgas.length) {
+                console.log('[Frontend] LGAs loaded from backend:', lgas.length);
+                return lgas;
+            }
+        }
+        console.warn(`[Frontend] Local LGAs service returned ${res.status} or empty for ${state}`);
+    } catch (err) {
+        console.warn(`[Frontend] Local LGAs fetch failed for ${state}:`, err);
+    }
+
+    // Fallback: Direct external API call
+    console.log('[Frontend] Fetching LGAs directly from external API...');
+    try {
+        const res2 = await fetch(`https://nga-states-lga.onrender.com/?state=${encoded}`);
+        const text = await res2.text();
+        
+        // Check if it's an error message
+        if (text.trim().startsWith('Error:')) {
+            console.warn(`[Frontend] External API error for ${state}:`, text);
+            return [];
+        }
+        
+        // Try to parse as JSON
+        const responseData = JSON.parse(text);
+        if (Array.isArray(responseData)) {
+            console.log('[Frontend] LGAs loaded from external API:', responseData.length);
+            return responseData;
+        }
+    } catch (err) {
+        console.error(`[Frontend] External LGA fetch failed for ${state}:`, err);
+    }
+
+    return [];
+}
+
+function determineDeliveryFee(state) {
+    const normalized = (state || '').toLowerCase();
+    if (normalized === 'lagos') return 1500;
+    if (normalized === 'fct' || normalized === 'abuja') return 2000;
+    if (!normalized) return 0;
+    return 2500;
+}
+
+function updateDeliveryFeeDisplay() {
+    const display = document.getElementById('deliveryFeeDisplay');
+    if (!display) return;
+    display.textContent = `Delivery Fee: ₦${deliveryFee.toLocaleString()}`;
+}
+
+function getCurrentUserId() {
+    const user = getStoredUser();
+    return user?._id || user?.id || null;
+}
+
+async function getUserFromBackend() {
+    const id = getCurrentUserId();
+    if (!id) return null;
+
+    const token = getAuthToken();
+    if (!token) return null;
+
+    try {
+        const res = await fetch(`http://localhost:4000/api/v1/user/${id}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.user || null;
+    } catch (err) {
+        console.error('Could not fetch user profile', err);
+        return null;
+    }
+}
+
+async function saveUserLocation(state, lga) {
+    const id = getCurrentUserId();
+    if (!id) return;
+
+    const token = getAuthToken();
+    if (!token) return;
+
+    try {
+        await fetch(`http://localhost:4000/api/v1/user/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ state, lga })
+        });
+
+        const user = getStoredUser();
+        if (user) {
+            user.state = state;
+            user.lga = lga;
+            localStorage.setItem('user', JSON.stringify(user));
+        }
+    } catch (err) {
+        console.error('Could not save user location', err);
+    }
+}
+
+async function initLocationSelection() {
+    const stateSelect = document.getElementById('stateSelect');
+    const lgaSelect = document.getElementById('lgaSelect');
+    const notice = document.getElementById('locationNotice');
+    const loadStatesBtn = document.getElementById('loadStatesBtn');
+    const showLgasBtn = document.getElementById('showLgasBtn');
+    if (!stateSelect || !lgaSelect || !loadStatesBtn || !showLgasBtn) return;
+
+    // Load saved user location from backend
+    const backendUser = await getUserFromBackend();
+    if (backendUser) {
+        if (backendUser.state) selectedState = backendUser.state;
+        if (backendUser.lga) selectedLga = backendUser.lga;
+        localStorage.setItem('selectedState', selectedState);
+        localStorage.setItem('selectedLga', selectedLga);
+    }
+
+    // Initially disable both selects until states are loaded
+    stateSelect.disabled = true;
+    lgaSelect.disabled = true;
+
+    loadStatesBtn.addEventListener('click', async () => {
+        // Disable button and show loading
+        loadStatesBtn.disabled = true;
+        const originalText = loadStatesBtn.textContent;
+        loadStatesBtn.textContent = 'Loading States...';
+
+        notice.textContent = 'Loading all Nigeria states...';
+        notice.classList.add('show');
+        try {
+            const states = await fetchStates();
+            if (!states || !states.length) {
+                notice.textContent = 'Could not load state list. Try again later.';
+                return;
+            }
+            stateSelect.disabled = false;
+            stateSelect.innerHTML = '<option value="">-- Select State --</option>' + states.map(s => `
+                <option value="${s}" ${selectedState === s ? 'selected' : ''}>${s}</option>
+            `).join('');
+
+            if (selectedState) {
+                stateSelect.value = selectedState;
+                await onStateSelected(selectedState);
+            }
+
+            // Enable LGA dropdown now that states are loaded
+            lgaSelect.disabled = false;
+            lgaSelect.innerHTML = '<option value="">-- Select a state first --</option>';
+
+            notice.textContent = 'All Nigeria states loaded. Please select a state.';
+            notice.classList.add('show');
+            loadStatesBtn.style.display = 'none'; // Hide button after loading
+        } catch (error) {
+            notice.textContent = 'Failed to load states. Please try again.';
+            console.error('Error loading states:', error);
+        } finally {
+            // Re-enable button
+            loadStatesBtn.disabled = false;
+            loadStatesBtn.textContent = originalText;
+        }
+    });
+
+    showLgasBtn.addEventListener('click', async () => {
+        if (!selectedState) {
+            notice.textContent = 'Please select a state first to show LGAs.';
+            notice.classList.add('show');
+            return;
+        }
+
+        // Disable button and show loading
+        showLgasBtn.disabled = true;
+        const originalText = showLgasBtn.textContent;
+        showLgasBtn.textContent = 'Loading...';
+
+        notice.textContent = 'Loading LGAs...';
+        notice.classList.add('show');
+        try {
+            await onStateSelected(selectedState);
+            notice.textContent = `All LGAs for ${selectedState} are now shown in the LGA dropdown.`;
+            notice.classList.add('show');
+        } catch (error) {
+            notice.textContent = 'Failed to load LGAs. Please try again.';
+            notice.classList.add('show');
+            console.error('Error loading LGAs:', error);
+        } finally {
+            // Re-enable button
+            showLgasBtn.disabled = false;
+            showLgasBtn.textContent = originalText;
+        }
+    });
+
+    stateSelect.addEventListener('change', async (e) => {
+        selectedState = e.target.value;
+        selectedLga = '';
+        localStorage.setItem('selectedState', selectedState);
+        localStorage.removeItem('selectedLga');
+        await onStateSelected(selectedState);
+        await saveUserLocation(selectedState, '');
+        updateCart();
+    });
+
+    lgaSelect.addEventListener('change', async (e) => {
+        selectedLga = e.target.value;
+        localStorage.setItem('selectedLga', selectedLga);
+        await saveUserLocation(selectedState, selectedLga);
+        updateCart();
+    });
+
+    // Auto-load states and chosen LGA when opening the cart if possible
+    const currentState = selectedState || stateSelect.value;
+    if (currentState) {
+        stateSelect.value = currentState;
+        await onStateSelected(currentState);
+    } else {
+        // Start by loading state list to prompt user
+        loadStatesBtn.click();
+    }
+
+    deliveryFee = determineDeliveryFee(selectedState);
+    updateDeliveryFeeDisplay();
+}
+
+async function onStateSelected(state) {
+    const lgaSelect = document.getElementById('lgaSelect');
+    if (!lgaSelect) return;
+
+    if (!state) {
+        // If LGA dropdown is enabled but no state selected, show instruction
+        if (!lgaSelect.disabled) {
+            lgaSelect.innerHTML = '<option value="">-- Select a state first --</option>';
+        } else {
+            lgaSelect.innerHTML = '<option value="">-- Choose state first --</option>';
+        }
+        deliveryFee = 0;
+        updateDeliveryFeeDisplay();
+        return;
+    }
+
+    // Show loading state
+    lgaSelect.disabled = true;
+    lgaSelect.innerHTML = '<option value="">Loading LGAs...</option>';
+
+    try {
+        const lgas = await fetchLGAs(state);
+        if (!lgas || !lgas.length) {
+            lgaSelect.innerHTML = '<option value="">-- No LGAs found --</option>';
+            lgaSelect.disabled = true;
+        } else {
+            lgaSelect.disabled = false;
+            lgaSelect.innerHTML = '<option value="">-- Select LGA --</option>' + lgas.map(l => `
+                <option value="${l}" ${selectedLga === l ? 'selected' : ''}>${l}</option>
+            `).join('');
+            if (selectedLga) lgaSelect.value = selectedLga;
+        }
+    } catch (error) {
+        lgaSelect.innerHTML = '<option value="">-- Error loading LGAs --</option>';
+        lgaSelect.disabled = true;
+        console.error('Error fetching LGAs:', error);
+    }
+
+    deliveryFee = determineDeliveryFee(state);
+    updateDeliveryFeeDisplay();
 }
 
 function updateCart() {
@@ -402,7 +861,20 @@ function updateCart() {
         });
 
         if (cartTotal) {
-            cartTotal.textContent = `Total: $${total.toFixed(2)}`;
+            const combinedTotal = total + deliveryFee / (localStorage.getItem('currency') === 'N' ? 1 : 1); // currency conversion placeholder
+            cartTotal.textContent = `Total: $${combinedTotal.toFixed(2)}`;
+        }
+
+        // If the user hasn't chosen a state/lga yet, prompt for location
+        const locNotice = document.getElementById('locationNotice');
+        if (locNotice) {
+            if (!selectedState) {
+                locNotice.textContent = 'Please choose a delivery state to calculate your exact delivery fee.';
+            } else if (!selectedLga) {
+                locNotice.textContent = 'Please choose an LGA for delivery.';
+            } else {
+                locNotice.textContent = `Deliver to ${selectedLga}, ${selectedState}.`;
+            }
         }
 
         // If the user isn't logged in, disable checkout buttons and show a prompt
@@ -430,6 +902,17 @@ function addToCart(id, quantity = 1) {
         console.log('Product not found');
         return;
     }
+
+    const itemStock = Number(item.stock ?? 0);
+    if (itemStock <= 0) {
+        alert('Sorry, this product is sold out.');
+        return;
+    }
+
+    if (quantity > itemStock) {
+        quantity = itemStock;
+        alert(`Only ${itemStock} left in stock, adding ${itemStock} to your cart.`);
+    }
     
     // Normalize the item to have consistent properties
     const normalizedItem = {
@@ -450,6 +933,12 @@ function addToCart(id, quantity = 1) {
         });
     }
     
+    // Decrement stock on front-end and sync server (if possible)
+    item.stock = itemStock - quantity;
+    if (item.stock < 0) item.stock = 0;
+    updateProductStock(item.id, item.stock);
+    displayProducts();
+
     // Monitor cart addition
     console.log(`✅ Added ${quantity}x to cart: ${normalizedItem.name} - $${normalizedItem.price}`);
     console.log(`📊 Total items in cart: ${cart.length}`);
@@ -539,7 +1028,10 @@ function initiatePaystackPayment(email, amount) {
                     timestamp: new Date().toLocaleString(),
                     items: cart,
                     paymentType: 'Paystack',
-                    status: 'success'
+                    status: 'success',
+                    state: selectedState,
+                    lga: selectedLga,
+                    deliveryFee: deliveryFee
                 };
                 
                 // Send to backend for persistent storage
@@ -671,6 +1163,10 @@ if (confirmBankPaymentBtn) {
             timestamp: new Date().toLocaleString(),
             items: cart,
             paymentType: 'Bank Transfer',
+            status: 'pending',
+            state: selectedState,
+            lga: selectedLga,
+            deliveryFee: deliveryFee,
             status: "pending"
         };
         
@@ -747,63 +1243,103 @@ if (cartIconLink) {
 
 // Search
 function searchProduct(){
-    const query = document.getElementById("search").value.toLowerCase();
+    const query = document.getElementById("search").value.trim();
     if (!productContainer) return;
-    productContainer.innerHTML = "";
     
-    const filteredProducts = products.filter(product => {
-        const productName = (product.title || product.name || "").toLowerCase();
-        const productDesc = (product.description || "").toLowerCase();
-        return productName.includes(query) || productDesc.includes(query);
-    });
+    // Clear current products and show loading
+    productContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; padding: 40px;">Searching...</p>';
     
-    if (filteredProducts.length === 0) {
-        productContainer.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; padding: 40px;">No products found matching "${query}"</p>`;
+    if (!query) {
+        // If no query, show all products
+        displayProducts();
         return;
     }
     
-    filteredProducts.forEach((product) => {
-        const productName = product.title || product.name;
-        const productImage = product.image || `./${product.img}`;
-        const productPrice = product.price;
-        const productCategory = product.category || 'Uncategorized';
-        const productRating = product.rating || { rate: 0, count: 0 };
+    // Fetch search results from backend
+    fetch(`http://localhost:4000/api/v1/products/search?q=${encodeURIComponent(query)}`)
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return res.json();
+    })
+    .then(data => {
+        productContainer.innerHTML = "";
         
-        const div = document.createElement("div");
-        div.className = "product";
+        if (!Array.isArray(data) || data.length === 0) {
+            productContainer.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; padding: 40px;">No products found matching "${query}"</p>`;
+            return;
+        }
         
-        const ratingStars = productRating.rate ? String.fromCharCode(0x2B50).repeat(Math.round(productRating.rate)) : 'No rating';
-        
-        div.innerHTML = `
-            <img src="${productImage}" alt="${productName}" onerror="this.src='https://via.placeholder.com/200?text=Product'">
-            <h3>${productName}</h3>
-            <span class="product-category">${productCategory}</span>
-            <div class="product-rating">
-                <span class="stars">${ratingStars}</span>
-                <span>(${productRating.count})</span>
-            </div>
-            <div class="product-price">$${productPrice.toFixed(2)}</div>
-            <div class="product-actions">
-                <button class="view-btn" onclick="event.stopPropagation()">\uD83D\uDD0D\uFE0F View</button>
-                <button class="cart-btn" onclick="event.stopPropagation()">\uD83D\uDED2 Add</button>
-            </div>
-        `;
-        
-        div.style.cursor = 'pointer';
-        div.onclick = () => openProductModal(product.id);
-        
-        div.querySelector(".view-btn").onclick = (e) => {
-            e.stopPropagation();
-            openProductModal(product.id);
-        };
-        
-        div.querySelector(".cart-btn").onclick = (e) => {
-            e.stopPropagation();
-            addToCartDirect(product.id, 1);
-        };
-        
-        productContainer.appendChild(div);
-    }); 
+        data.forEach((product) => {
+            const productId = product.id;
+            const div = document.createElement("div");
+            div.className = "product";
+            div.innerHTML = renderProductCard(product);
+
+            div.style.cursor = 'pointer';
+            div.onclick = () => openProductModal(productId);
+
+            // Add event listeners for buttons
+            const viewBtn = div.querySelector(".view-btn");
+            const cartBtn = div.querySelector(".cart-btn");
+            
+            if (viewBtn) {
+                viewBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    openProductModal(productId);
+                };
+            }
+
+            if (cartBtn) {
+                cartBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    addToCartDirect(productId, 1);
+                };
+            }
+
+            productContainer.appendChild(div);
+        });
+    })
+    .catch(err => {
+        console.error('Error searching products:', err);
+        productContainer.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; padding: 40px;">Error searching products. Please check your connection and try again.</p>`;
+    });
+}
+
+// Notification function
+function showNotification(message, type = 'info') {
+    // Remove existing notification if any
+    const existingNotification = document.querySelector('.notification-toast');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `notification-toast ${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+        color: white;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        z-index: 9999;
+        font-size: 14px;
+        font-weight: 500;
+        animation: slideIn 0.3s ease-out;
+        max-width: 300px;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
 // Slider functionality
@@ -858,7 +1394,7 @@ function autoSlide() {
 
 // Initialize slider
 showSlide(slideIndex);
-autoSlide();
+// autoSlide(); // Disabled to stop recurring background loop
 
 // Hero Slider functionality
 let heroSlideIndex = 1;
@@ -912,110 +1448,58 @@ function autoHeroSlide() {
 
 // Initialize hero slider
 showHeroSlide(heroSlideIndex);
-autoHeroSlide();
+// autoHeroSlide(); // Disabled to stop recurring background loop
+
+function stopSliders() {
+    clearTimeout(slideTimer);
+    clearTimeout(heroSlideTimer);
+    console.log('Sliders stopped.');
+}
 
 // Category filter function
 function filterByCategory(category) {
     console.log('Filtering by category:', category);
-    console.log('Total products available:', products.length);
     currentCategory = category;
     
-    if (!productContainer) return;
-    productContainer.innerHTML = "";
+    const allProducts = document.querySelectorAll('.product');
+    let visibleCount = 0;
     
-    const backendMap = {
-        'Electronics': 'electronics',
-        'Men\'s Clothing': 'men\'s clothing',
-        'Women\'s Clothing': 'women\'s clothing',
-        'Jewelry': 'jewelery',
-        'Books': 'books',
-        'Home & Garden': 'home',
-        'Sports': 'sports'
-    };
-    const fallbackMap = {
-        'Electronics': ['Iphone', 'Samsung', 'Wireless', 'Earpod'],
-        'Clothing': [],
-        'Books': [],
-        'Home & Garden': [],
-        'Sports': []
-    };
-
-    const filteredProducts = products.filter(product => {
-        if (product.category) {
-            // backend item
-            const target = backendMap[category];
-            if (target) {
-                const matches = (product.category || "").toLowerCase().includes(target.toLowerCase());
-                if (matches) console.log('Backend product matched:', product.title || product.name, 'category:', product.category);
-                return matches;
+    if (category === 'All') {
+        allProducts.forEach(product => {
+            product.style.display = 'block';
+            visibleCount++;
+        });
+        showNotification(`Showing all ${products.length} products`, 'success');
+    } else {
+        const targetCategory = category.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        console.log('Target category (normalized):', targetCategory);
+        
+        allProducts.forEach(product => {
+            const productCategory = product.getAttribute('data-category');
+            console.log('Product category:', productCategory, 'vs Target:', targetCategory);
+            
+            if (productCategory === targetCategory) {
+                product.style.display = 'block';
+                visibleCount++;
+            } else {
+                product.style.display = 'none';
             }
-            return false;
+        });
+        
+        if (visibleCount === 0) {
+            showNotification(`No products found in ${category} category`, 'info');
         } else {
-            // fallback item
-            const keywords = fallbackMap[category] || [];
-            const name = (product.title || product.name || "").toLowerCase();
-            const matches = keywords.some(k => name.includes(k.toLowerCase()));
-            if (matches) console.log('Fallback product matched:', product.title || product.name);
-            return matches;
+            showNotification(`Showing ${visibleCount} products in ${category}`, 'success');
         }
-    });
-
-    console.log('Filtered products count:', filteredProducts.length);
-    
-    // Update active category indicator
-    updateActiveCategoryIndicator(category);
-
-    if (filteredProducts.length === 0) {
-        productContainer.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; padding: 40px;">No products found in this category</p>`;
-        return;
     }
-
-    filteredProducts.forEach((product) => {
-        const productName = product.title || product.name;
-        const productImage = product.image || `./${product.img}`;
-        const productPrice = product.price;
-        const productCategory = product.category || 'Uncategorized';
-        const productRating = product.rating || { rate: 0, count: 0 };
-        
-        const div = document.createElement("div");
-        div.className = "product";
-        
-        // Add category class for styling
-        const categoryClass = productCategory.toLowerCase().replace(/[^a-z0-9]/g, '-');
-        div.classList.add(`category-${categoryClass}`);
-        
-        const ratingStars = productRating.rate ? String.fromCharCode(0x2B50).repeat(Math.round(productRating.rate)) : 'No rating';
-        
-        div.innerHTML = `
-            <img src="${productImage}" alt="${productName}" onerror="this.src='https://via.placeholder.com/200?text=Product'">
-            <h3>${productName}</h3>
-            <span class="product-category">${getCategoryIcon(productCategory)} ${productCategory}</span>
-            <div class="product-rating">
-                <span class="stars">${ratingStars}</span>
-                <span>(${productRating.count})</span>
-            </div>
-            <div class="product-price">$${productPrice.toFixed(2)}</div>
-            <div class="product-actions">
-                <button class="view-btn" onclick="event.stopPropagation()">\uD83D\uDD0D\uFE0F View</button>
-                <button class="cart-btn" onclick="event.stopPropagation()">\uD83D\uDED2 Add</button>
-            </div>
-        `;
-        
-        div.style.cursor = 'pointer';
-        div.onclick = () => openProductModal(product.id);
-        
-        div.querySelector(".view-btn").onclick = (e) => {
-            e.stopPropagation();
-            openProductModal(product.id);
-        };
-        
-        div.querySelector(".cart-btn").onclick = (e) => {
-            e.stopPropagation();
-            addToCartDirect(product.id, 1);
-        };
-        
-        productContainer.appendChild(div);
-    });
+    
+    // Scroll to products section
+    const productsSection = document.getElementById('product1') || document.querySelector('.products-section');
+    if (productsSection) {
+        productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    updateActiveCategoryIndicator(category);
 }
 
 // Contact Form Functionality
@@ -1081,20 +1565,65 @@ if (contactForm) {
 }
 
 // Fetch products from backend on page load - AFTER all functions are defined
-fetch('http://localhost:4000/api/v1/products')
-.then(res => res.json())
-.then(data => {
-    console.log('Products fetched:', data);
-    products = [...data, ...fallbackProducts];
-    if (productContainer) {
-        displayProducts();
-    }
-})
-.catch((err) => {
-    console.log('Error fetching products:', err);
-    // Fallback to local products if backend fails
+function initializeProducts() {
+    console.log('Initializing products...');
+    
+    // First, show fallback products immediately
     products = [...fallbackProducts];
     if (productContainer) {
         displayProducts();
     }
-})
+    
+    // Then try to fetch from backend
+    fetch('http://localhost:4000/api/v1/products')
+    .then(res => {
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+    })
+    .then(data => {
+        console.log('Products fetched from backend:', data);
+        if (data && Array.isArray(data) && data.length > 0) {
+            products = [...data, ...fallbackProducts];
+            if (productContainer) {
+                displayProducts();
+            }
+        }
+    })
+    .catch((err) => {
+        console.log('Error fetching products from backend, using fallback:', err);
+        // Products already set to fallback, no action needed
+    });
+}
+
+// Initialize products when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeProducts);
+} else {
+    initializeProducts();
+}
+
+// Add Enter key listener for search input
+const searchInput = document.getElementById("search");
+if (searchInput) {
+    searchInput.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            searchProduct();
+        }
+    });
+}
+
+// Expose necessary functions globally for HTML onclick handlers
+window.searchProduct = searchProduct;
+window.displayProducts = displayProducts;
+window.filterByCategory = filterByCategory;
+
+// Make search button functionality work properly
+const searchBtn = document.querySelector('.search-btn');
+if (searchBtn) {
+    searchBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        searchProduct();
+    });
+}

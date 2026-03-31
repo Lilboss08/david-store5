@@ -43,3 +43,8 @@ export function protectPage() {
     }
     return true;
 }
+
+export function isAdmin() {
+    const user = getStoredUser();
+    return Boolean(user && user.role === 'admin');
+}

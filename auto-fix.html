@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>David Store - Auto Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .fix-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #007bff;
+            text-align: center;
+        }
+        .fix-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+        }
+        .fix-section h2 {
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 1em;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .fix-list {
+            list-style: none;
+            padding: 0;
+        }
+        .fix-list li {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .fix-list li:hover {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="fix-container">
+        <h1>🔧 David Store - Auto Fix Tool</h1>
+        
+        <div class="fix-section">
+            <h2>⚡ Quick Fixes</h2>
+            <div class="fix-list">
+                <li onclick="fixLocalStorage()">🗄️ Fix LocalStorage Issues</li>
+                <li onclick="fixAdminAccess()">👤 Fix Admin Access</li>
+                <li onclick="fixCartIssues()">🛒 Fix Cart Issues</li>
+                <li onclick="fixLGAData()">📍 Fix LGA Data</li>
+                <li onclick="resetEverything()">🔄 Reset Everything</li>
+            </div>
+        </div>
+
+        <div class="fix-section">
+            <h2>🧪 Run Diagnostics</h2>
+            <button onclick="runFullDiagnostics()">Run Complete Diagnostics</button>
+            <button onclick="testBackendConnection()">Test Backend Connection</button>
+            <button onclick="testAuthentication()">Test Authentication</button>
+            <button onclick="testProductAPI()">Test Product API</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'success') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        function fixLocalStorage() {
+            try {
+                // Clear old data
+                localStorage.clear();
+                
+                // Initialize proper structure
+                localStorage.setItem('cart', '[]');
+                localStorage.setItem('user', 'null');
+                localStorage.setItem('token', '');
+                localStorage.setItem('redirectAfterLogin', '');
+                
+                showResult('✅ LocalStorage fixed! All data has been reset to proper format.', 'success');
+            } catch (error) {
+                showResult('❌ Error fixing localStorage: ' + error.message, 'error');
+            }
+        }
+
+        function fixAdminAccess() {
+            showResult('🔄 Setting up admin account...', 'warning');
+            
+            fetch('http://localhost:4000/api/v1/user/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fullName: 'Admin User',
+                    email: 'admin@davidstore.com',
+                    password: 'admin123',
+                    confirmPassword: 'admin123',
+                    role: 'admin',
+                    adminPasscode: 'blessing2004'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.user || data.message === 'user with the email already exists') {
+                    // Now try to login
+                    return fetch('http://localhost:4000/api/v1/user/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: 'admin@davidstore.com',
+                            password: 'admin123'
+                        })
+                    });
+                } else {
+                    throw new Error(data.message || 'Registration failed');
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.token) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('token', data.token);
+                    showResult(`✅ Admin access fixed! Logged in as ${data.user.role}`, 'success');
+                } else {
+                    throw new Error(data.message || 'Login failed');
+                }
+            })
+            .catch(error => {
+                showResult('❌ Error fixing admin access: ' + error.message, 'error');
+            });
+        }
+
+        function fixCartIssues() {
+            try {
+                let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                
+                if (!Array.isArray(cart)) {
+                    cart = [];
+                }
+                
+                // Validate and clean cart items
+                cart = cart.filter(item => {
+                    return item && 
+                           item.id && 
+                           typeof item.price === 'number' && 
+                           item.price > 0 &&
+                           (item.quantity || 1) > 0;
+                });
+                
+                localStorage.setItem('cart', JSON.stringify(cart));
+                showResult(`✅ Cart fixed! ${cart.length} valid items in cart.`, 'success');
+            } catch (error) {
+                showResult('❌ Error fixing cart: ' + error.message, 'error');
+            }
+        }
+
+        function fixLGAData() {
+            showResult('✅ LGA data is using free API fallback. LGAs will load from: https://nga-states-lga.onrender.com/api', 'success');
+        }
+
+        function resetEverything() {
+            if (confirm('Are you sure you want to reset everything? This will log you out and clear all data.')) {
+                localStorage.clear();
+                showResult('🔄 Everything reset! Page will reload.', 'warning');
+                setTimeout(() => location.reload(), 1000);
+            }
+        }
+
+        async function testBackendConnection() {
+            try {
+                const response = await fetch('http://localhost:4000/api/v1/products');
+                if (response.ok) {
+                    showResult('✅ Backend connection successful!', 'success');
+                } else {
+                    showResult(`❌ Backend error: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult('❌ Backend not reachable: ' + error.message, 'error');
+            }
+        }
+
+        async function testAuthentication() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                try {
+                    const userData = JSON.parse(user);
+                    showResult(`✅ Authentication data found. User: ${userData.email || 'Unknown'}, Role: ${userData.role || 'user'}`, 'success');
+                } catch (error) {
+                    showResult('⚠️ Authentication data corrupted. Please re-login.', 'warning');
+                }
+            } else {
+                showResult('⚠️ No authentication data found. Please login.', 'warning');
+            }
+        }
+
+        async function testProductAPI() {
+            try {
+                const response = await fetch('http://localhost:4000/api/v1/products');
+                const data = await response.json();
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    showResult(`✅ Product API working! Found ${data.length} products.`, 'success');
+                } else {
+                    showResult('⚠️ Product API returned empty data.', 'warning');
+                }
+            } catch (error) {
+                showResult('❌ Product API error: ' + error.message, 'error');
+            }
+        }
+
+        async function runFullDiagnostics() {
+            showResult('🔄 Running comprehensive diagnostics...', 'warning');
+            
+            const results = [];
+            
+            // Test 1: Backend Connection
+            try {
+                const response = await fetch('http://localhost:4000/api/v1/products');
+                results.push({ test: 'Backend Connection', status: response.ok ? 'pass' : 'fail' });
+            } catch {
+                results.push({ test: 'Backend Connection', status: 'fail' });
+            }
+            
+            // Test 2: LocalStorage
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                results.push({ test: 'LocalStorage', status: 'pass' });
+            } catch {
+                results.push({ test: 'LocalStorage', status: 'fail' });
+            }
+            
+            // Test 3: Auth Data
+            const hasAuth = localStorage.getItem('token') && localStorage.getItem('user');
+            results.push({ test: 'Auth Data', status: hasAuth ? 'pass' : 'warning' });
+            
+            // Test 4: Cart Data
+            try {
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                results.push({ test: 'Cart Data', status: Array.isArray(cart) ? 'pass' : 'fail' });
+            } catch {
+                results.push({ test: 'Cart Data', status: 'fail' });
+            }
+            
+            let resultHTML = '<h3>Diagnostic Results:</h3><ul>';
+            results.forEach(r => {
+                const icon = r.status === 'pass' ? '✅' : (r.status === 'warning' ? '⚠️' : '❌');
+                resultHTML += `<li>${icon} ${r.test}: ${r.status.toUpperCase()}</li>`;
+            });
+            resultHTML += '</ul>';
+            
+            const allPassed = results.every(r => r.status !== 'fail');
+            showResult(resultHTML + (allPassed ? '🎉 All systems operational!' : '⚠️ Some issues detected.'), allPassed ? 'success' : 'warning');
+        }
+
+        // Run basic diagnostics on load
+        window.onload = function() {
+            console.log('David Store Auto Fix Tool Loaded');
+        };
+    </script>
+</body>
+</html>

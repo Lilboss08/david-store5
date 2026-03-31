@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Setup - David Store</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .setup-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            margin-bottom: 20px;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <h1>🔧 Admin Account Setup</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Important:</strong> This tool is for setting up admin accounts. Use it carefully!
+        </div>
+
+        <div class="info">
+            <strong>Admin Registration Details:</strong><br>
+            - Email: admin@davidstore.com<br>
+            - Password: admin123<br>
+            - Admin Passcode: blessing2004<br>
+            <br>
+            <strong>What this does:</strong><br>
+            1. Creates an admin user if they don't exist<br>
+            2. Upgrades existing user to admin if they do exist<br>
+            3. Allows access to admin features like product management
+        </div>
+
+        <div class="form-group">
+            <label for="email">Admin Email:</label>
+            <input type="email" id="email" value="admin@davidstore.com" readonly>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Admin Password:</label>
+            <input type="password" id="password" value="admin123" readonly>
+        </div>
+
+        <button onclick="setupAdmin()">Setup Admin Account</button>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        async function setupAdmin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('message');
+
+            messageDiv.innerHTML = '<div class="message info">⏳ Setting up admin account...</div>';
+
+            try {
+                // Step 1: Register the user as admin
+                console.log('Registering admin user...');
+                const registerResponse = await fetch('http://localhost:4000/api/v1/user/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fullName: 'Admin User',
+                        email: email,
+                        password: password,
+                        confirmPassword: password,
+                        role: 'admin',
+                        adminPasscode: 'blessing2004'
+                    })
+                });
+
+                const registerData = await registerResponse.json();
+                console.log('Registration response:', registerData);
+
+                if (registerResponse.status === 201 || registerData.message === 'user with the email already exists') {
+                    // Step 2: Login to get token
+                    console.log('Logging in as admin...');
+                    const loginResponse = await fetch('http://localhost:4000/api/v1/user/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password
+                        })
+                    });
+
+                    const loginData = await loginResponse.json();
+                    console.log('Login response:', loginData);
+
+                    if (loginResponse.ok && loginData.token) {
+                        // Step 3: Check if user has admin role, if not, we'll need to use a direct approach
+                        if (loginData.user && loginData.user.role === 'admin') {
+                            // Store admin credentials
+                            localStorage.setItem('user', JSON.stringify(loginData.user));
+                            localStorage.setItem('token', loginData.token);
+
+                            messageDiv.innerHTML = `
+                                <div class="message success">
+                                    ✅ <strong>Admin account setup successful!</strong><br>
+                                    Email: ${loginData.user.email}<br>
+                                    Role: ${loginData.user.role}<br>
+                                    <br>
+                                    <a href="admin.html" style="color: #007bff;">Go to Admin Dashboard</a><br>
+                                    <a href="index.html" style="color: #007bff;">Go to Home Page</a>
+                                </div>
+                            `;
+                        } else {
+                            // User exists but doesn't have admin role - need to upgrade via database
+                            messageDiv.innerHTML = `
+                                <div class="message error">
+                                    ❌ <strong>User exists but doesn't have admin role.</strong><br>
+                                    Please run the backend script to upgrade this user to admin:<br>
+                                    <code>node backend/create-admin.js</code><br>
+                                    <br>
+                                    Or manually update the user role in MongoDB to 'admin'.
+                                </div>
+                            `;
+                        }
+                    } else {
+                        messageDiv.innerHTML = `
+                            <div class="message error">
+                                ❌ <strong>Login failed:</strong> ${loginData.message || 'Unknown error'}
+                            </div>
+                        `;
+                    }
+                } else {
+                    messageDiv.innerHTML = `
+                        <div class="message error">
+                            ❌ <strong>Registration failed:</strong> ${registerData.message || 'Unknown error'}
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                console.error('Setup error:', error);
+                messageDiv.innerHTML = `
+                    <div class="message error">
+                        ❌ <strong>Network error:</strong> ${error.message}<br>
+                        Make sure the backend server is running on port 4000.
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-setup on page load
+        window.onload = setupAdmin;
+    </script>
+</body>
+</html>
